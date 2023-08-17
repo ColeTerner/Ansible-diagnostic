@@ -1,0 +1,12 @@
+---
+- name: rm packages from OS system
+  hosts:  all
+  tasks:
+
+  - name: remove packages through apt
+    apt:
+      name: "{{ item }}"
+      state:  absent
+    with_items:
+      - findface-counter
+    become: yes

@@ -1,0 +1,58 @@
+---
+- name: Transfer and execute a script.
+  hosts: all
+  gather_facts: false
+  remote_user: detect
+  tasks:
+
+    - name: install basic packages
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - ntp
+      become: yes
+
+    - name: set lenta ntp
+      shell: echo "server {{timesrv}}" | sudo tee /etc/ntp.conf
+      become: yes
+
+    - name: echo "server 1.pool.ntp.org" | sudo tee -a /etc/ntp.conf
+      shell: echo "server 1.pool.ntp.org" | sudo tee -a /etc/ntp.conf
+      become: yes
+
+    - name: sudo service timesyncd stop
+      service:
+        name: systemd-timesyncd
+        state: stopped
+        enabled: no
+      become: yes
+
+    - shell: sudo service ntp stop;sudo ntpd -gq;sudo service ntp start
+      become: yes
+
+    - name: sudo service ntp restart
+      service:
+        name: ntp
+        state: restarted
+        enabled: yes
+      become: yes
+
+    - name: sudo service unlift restart
+      service:
+        name: unlift
+        state: restarted
+        enabled: yes
+      become: yes
+
+    - name: sudo service unlift restart
+      service:
+        name: unlift-updater
+        state: restarted
+        enabled: yes
+      become: yes
+
+    - name: show /etc/ntp.conf
+      shell: cat /etc/ntp.conf | grep 10.0.0.254
+      register: time
+    - debug: var=time.stdout

@@ -1,0 +1,49 @@
+---
+- name: TOO MANY fix limit
+  hosts:  all
+  vars:
+    new_limit:  16384
+  tasks:
+
+  - name: Get current limit
+    shell:  ulimit -n
+    register: limit
+  - debug:  var=limit.stdout
+
+  - name: Count errors
+    shell:  zgrep 'Too many open files' /var/log/syslog.* | wc -l
+    register: error_counter
+    become: yes
+  - debug:  var=error_counter.stdout
+
+  - block:
+      - name: assert limit
+        assert:
+          that: 
+            - '{{limit.stdout}} > 1024'
+            - '{{error_counter.stdout}} < 30'
+          fail_msg: 'LIMIT IS TOO LOW or a lot of TOO MANY errors'
+
+    rescue:
+
+      - name: Set new limit
+        blockinfile:
+          path: /etc/security/limits.conf
+          state:  present
+          insertafter:  "^EOF"
+          block:  |
+            * soft nofile {{new_limit}}
+            * hard nofile {{new_limit}}
+        become: yes
+
+
+
+      - name: reboot
+        reboot:
+        become: yes
+
+      - name: Show new ulimit
+        shell:  ulimit -n
+        register: new_ulimit
+      - debug:  var=new_ulimit.stdout
+

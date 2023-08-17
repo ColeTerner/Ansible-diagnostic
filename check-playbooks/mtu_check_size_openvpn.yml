@@ -1,0 +1,28 @@
+---
+- name: Check if mtu is greater then 1420 (openvpn standard) and change it to 1000
+  hosts:  all
+  vars:
+    network_interface:  eno1
+  tasks:
+
+  - name: Get current MTU from remote server(tun0 interface)
+    shell:  ip a | grep mtu | grep {{ network_interface }} | awk '{print $5}'
+    register: current_mtu
+  - debug:  var=current_mtu.stdout
+
+  - block:
+    - name: Check if current MTU is greater then 1420
+      assert:
+        that:
+          - "{{ current_mtu.stdout }} < 1420"
+        fail_msg: "MTU is lower then 1420 for OpenVPN"
+  
+    rescue:
+      - name: Fix MTU to 1000
+        shell:  sudo ifconfig {{ network_interface }} mtu 1000 up
+        become: yes
+
+  - name: Get current MTU from remote server(tun0 interface)
+    shell:  ip a | grep mtu | grep {{ network_interface }} | awk '{print $5}'
+    register: after_mtu
+  - debug:  var=after_mtu.stdout

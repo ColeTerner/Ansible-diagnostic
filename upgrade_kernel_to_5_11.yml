@@ -1,0 +1,11 @@
+---
+- name:  Upgrade kernel to 5.11
+  hosts:  all
+
+  #pre_tasks:
+
+  roles:
+    - role: upgrade_kernel_to_5_11
+
+  #post_tasks:
+      

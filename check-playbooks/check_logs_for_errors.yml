@@ -1,0 +1,15 @@
+---
+  - name: Gathering info from machines
+    hosts:  all
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+    tasks:
+    - name: Observe ERROR in last 100 logs
+      shell:  cat /var/log/syslog | tail -n 300 | grep ERROR | grep 401
+      register: logs
+      become: yes
+
+    - name: Print logs
+      debug:  |
+        msg="{{logs.stdout_lines}}"
+

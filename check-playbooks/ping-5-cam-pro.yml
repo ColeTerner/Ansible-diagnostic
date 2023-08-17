@@ -1,0 +1,66 @@
+---
+- name: Ping 5 cams
+  hosts:  all
+  ignore_errors:  yes
+  tasks:
+
+  - name: Print 1 octet
+    shell:  echo "{{ ansible_host }}" | awk -F "." '{print $1}'
+    register: first_octet
+
+  - name: Print 2 octet
+    shell:  echo "{{ ansible_host }}" | awk -F "." '{print $2}'
+    register: second_octet
+
+  - name: Print 3 octet
+    shell:  echo "{{ ansible_host }}" | awk -F "." '{print $3}'
+    register: third_octet
+
+  - name: Print last octet
+    shell:  echo "{{ ansible_host }}" | awk -F "." '{print $4}'
+    register: last_host_octet
+  - debug:  var=last_host_octet.stdout
+
+  # - name: ping cam
+  #   shell:  ping -c 4 "{{ first_octet.stdout }}"."{{ second_octet.stdout }}"."{{ third_octet.stdout }}"."{{ item }}"
+  #   register: item
+  # - debug:  var=item.stdout_lines
+  #   with_items:
+  #     - "{{ last_host_octet.stdout | int + 1 }}"
+  #     - "{{ last_host_octet.stdout | int + 2 }}"
+  #     - "{{ last_host_octet.stdout | int + 3 }}"
+  #     - "{{ last_host_octet.stdout | int + 4 }}"
+  #     - "{{ last_host_octet.stdout | int + 5 }}"
+  #   ignore_errors:  yes
+  # #- debug:  var=item.stdout_lines
+
+  - name: ping 1 cam
+    shell:  ping -c 4 "{{ first_octet.stdout }}"."{{ second_octet.stdout }}"."{{ third_octet.stdout }}"."{{ last_host_octet.stdout | int + 1 }}"
+    register: ping_first_cam
+  - debug:  var=ping_first_cam.stdout_lines
+  
+
+  - name: ping 2 cam
+    shell:  ping -c 4 "{{ first_octet.stdout }}"."{{ second_octet.stdout }}"."{{ third_octet.stdout }}"."{{ last_host_octet.stdout | int + 2 }}"
+    register: ping_second_cam
+  - debug:  var=ping_second_cam.stdout_lines
+  
+
+  - name: ping 3 cam
+    shell:  ping -c 4 "{{ first_octet.stdout }}"."{{ second_octet.stdout }}"."{{ third_octet.stdout }}"."{{ last_host_octet.stdout | int + 3 }}"
+    register: ping_third_cam
+  - debug:  var=ping_third_cam.stdout_lines
+  
+  
+  - name: ping 4 cam
+    shell:  ping -c 4 "{{ first_octet.stdout }}"."{{ second_octet.stdout }}"."{{ third_octet.stdout }}"."{{ last_host_octet.stdout | int + 4 }}"
+    register: ping_fourth_cam
+  - debug:  var=ping_fourth_cam.stdout_lines
+ 
+
+  - name: ping 5 cam
+    shell:  ping -c 4 "{{ first_octet.stdout }}"."{{ second_octet.stdout }}"."{{ third_octet.stdout }}"."{{ last_host_octet.stdout | int + 5 }}"
+    register: ping_fifth_cam
+  - debug:  var=ping_fifth_cam.stdout_lines
+
+  

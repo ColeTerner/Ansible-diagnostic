@@ -1,0 +1,50 @@
+
+---
+- name: Add Zabbix host via API
+  hosts: localhost
+  vars:
+    zabbix_api_url: "https://192.168.10.79/zabbix/api_jsonrpc.php"
+    zabbix_user: "Admin"
+    zabbix_password: "zabbix"
+  tasks:
+  - name: Add Zabbix host
+    uri:
+      url: "{{ zabbix_api_url }}"
+      method: POST
+      force_basic_auth: true
+      user: "{{ zabbix_user }}"
+      password: "{{ zabbix_password }}"
+      body_format: json
+      headers:
+        Content-Type: "application/json"
+      body:
+        jsonrpc: "2.0"
+        method: "host.create"
+        params:
+          host: "rename_it"
+          interfaces: [
+            {
+              type: 1,
+              main: 1,
+              ip: "{{ ansible_host }}",
+              dns: "",
+              port: 10051
+            }
+          ]
+          groups: [
+            {
+              groupid: "2"
+            }
+          ],
+          templates: [
+            {
+              templateid: "Basic_diag"
+            }
+          ]
+        auth: "{{ zabbix_auth_token }}"
+        id: "1"
+    register: zabbix_host_add_result
+
+  - debug:
+      var: zabbix_host_add_result
+

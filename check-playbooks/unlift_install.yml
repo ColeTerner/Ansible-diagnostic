@@ -1,0 +1,152 @@
+---
+- name: Install unlift unlift-updater
+  hosts:  all
+  tasks:
+
+    - name: sync files
+      synchronize:
+        src: /mnt/distr/ansible/ff523/
+        dest: /home/{{ansible_user}}/ff523/
+        partial: yes
+
+    - name: Copy file - cp unlift.service /etc/systemd/system/
+      copy:
+        src: /home/{{ ansible_user }}/ff523/unlift.service
+        dest: /etc/systemd/system/
+        remote_src: yes
+      become: yes
+      #ignore_errors: True
+
+    - name: Copy file - cp unlift-updater.service /etc/systemd/system/
+      copy:
+        src: /home/{{ ansible_user }}/ff523/unlift-updater.service
+        dest: /etc/systemd/system/
+        remote_src: yes
+      become: yes
+      #ignore_errors: True
+
+    - name: Create a directory if it does not exist #(Права!!?)
+      file:
+        path: /opt/unlift/unlift_proxy
+        state: directory
+        mode: '0755'
+      become: yes
+
+    - name: Create a directory if it does not exist #(Права!!?)
+      file:
+        path: /opt/unlift/unlift_updater
+        state: directory
+        mode: '0755'
+      become: yes
+
+    - name: Copy file - sudo cp updater.py /opt/unlift/unlift_updater/updater.py
+      copy:
+        src: /home/{{ ansible_user }}/ff523/updater.py
+        dest: /opt/unlift/unlift_updater/updater.py
+        remote_src: yes
+      become: yes
+
+    - name: Copy file - sudo cp unlift3.py /opt/unlift/unlift_proxy/unlift.py
+      copy:
+        src: /home/{{ ansible_user }}/ff523/unlift3.py
+        dest: /opt/unlift/unlift_proxy/unlift.py
+        remote_src: yes
+      become: yes
+
+    - name: Copy file - sudo cp unlift.ini /etc/
+      copy:
+        src: /home/{{ ansible_user }}/ff523/unlift.ini
+        dest: /etc/unlift.ini
+        remote_src: yes
+      become: yes
+
+    - name: Cp unlift_updater.ini /etc/unlift-updater.ini
+      copy:
+        src: /home/{{ ansible_user }}/ff523/unlift_updater.ini
+        dest: /etc/unlift-updater.ini
+        remote_src: yes
+      become: yes
+
+    - name: Create a directory /etc/unlift_plugins/
+      file:
+        path: /etc/unlift_plugins/
+        state: directory
+      become: yes
+
+    - name: Cp unlift-plugin.py /etc/unlift_plugins/
+      copy:
+        src: /home/{{ ansible_user }}/ff523/unlift-plugin.py
+        dest: /etc/unlift_plugins/unlift-plugin.py
+        remote_src: yes
+      become: yes
+
+    - name: Chmod 755 /etc/unlift_plugins/unlift-plugin.py
+      file:
+        path: /etc/unlift_plugins/unlift-plugin.py
+        mode: '0755'
+      become: yes
+
+    - name: Create a directory /opt/unlift/samples
+      file:
+        path: /opt/unlift/samples
+        state: directory
+      become: yes
+
+    - name: Cp sample.mp4 /opt/unlift/samples/
+      copy:
+        src: /home/{{ ansible_user }}/ff523/sample.mp4
+        dest: /opt/unlift/samples/sample.mp4
+        remote_src: yes
+      become: yes
+
+    - name: Cp ~/ff523/warning.mp3 /opt/unlift/unlift_proxy/
+      copy:
+        src: /home/{{ ansible_user }}/ff523/warning.mp3
+        dest: /opt/unlift/unlift_proxy/warning.mp3
+        remote_src: yes
+      become: yes
+
+    - name: Cp ~/ff523/warningf.mp3 /opt/unlift/unlift_proxy/
+      copy:
+        src: /home/{{ ansible_user }}/ff523/warningf.mp3
+        dest: /opt/unlift/unlift_proxy/warningf.mp3
+        remote_src: yes
+      become: yes
+
+    - name: cp ~/ff523/notice.mp3 /opt/unlift/unlift_proxy/
+      copy:
+        src: /home/{{ ansible_user }}/ff523/notice.mp3
+        dest: /opt/unlift/unlift_proxy/notice.mp3
+        remote_src: yes
+      become: yes
+
+    - name: SED unlift.ini
+      replace:
+        path: /etc/unlift.ini
+        regexp: 'unlift_token=.*'
+        replace: 'unlift_token={{token}}'
+      become: yes
+
+    - name: SED unlift-updater.ini
+      replace:
+        path: /etc/unlift-updater.ini
+        regexp: 'unlifttoken=.*'
+        replace: 'unlifttoken={{token}}'
+      become: yes
+
+    - name: Enable unlift.service && sudo systemctl start unlift
+      systemd:
+        name: unlift
+        enabled: yes
+        masked: no
+        state: restarted
+      become: yes
+      ignore_errors:  yes
+
+    - name: Enable unlift-updater.service && sudo systemctl start unlift-updater
+      systemd:
+        name: unlift-updater
+        enabled: yes
+        masked: no
+        state: restarted
+      become: yes

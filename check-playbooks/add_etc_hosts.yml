@@ -1,0 +1,21 @@
+---
+- name: Add unlift.ru/balancer to /etc/hosts 
+  hosts:  all
+  tasks:
+
+  - name: Insert several string after localhost
+    lineinfile:
+      path: /etc/hosts
+      line: "{{item}}"
+      insertafter:  "^127.0.0.1.*"
+    with_items:
+      - '#BEGIN ANSIBLE BLOCK'
+      - '185.158.114.149 unlift.ru'
+      - '5.252.193.80 face452k.bit-tech.co'
+      - '#END ANSIBLE BLOCK'
+    become: yes
+
+  - name: display /etc/hosts
+    shell: cat /etc/hosts
+    register: hosts
+  - debug:  var=hosts.stdout_lines

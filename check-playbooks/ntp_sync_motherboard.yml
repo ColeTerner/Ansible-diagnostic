@@ -1,0 +1,60 @@
+---
+- name: NTP sync and push the NTP time to motherboard
+  hosts:  all
+  become: yes
+  tags: ntp
+  tasks:
+
+    - name: MOTHERBOARD time
+      shell:  hwclock | cut -d "." -f 1
+      register: hw_time
+    - debug:  var=hw_time.stdout
+
+    - name: OS(NTP) time
+      shell:  date +"%Y-%m-%d %H:%M:%S"
+      register: hw_time
+    - debug:  var=hw_time.stdout
+
+    - name: ntpq "-P"
+      shell:  ntpq -p
+      register: ntpq
+    - debug:  var=ntpq.stdout_lines
+
+    - name: NTP stop
+      systemd:
+        name: ntp
+        state:  stopped
+    
+    - name: NTP sync
+      shell:  ntpd -gq
+
+    - name: NTP start
+      systemd:
+        name: ntp
+        state:  restarted
+
+    - name: UNLIFT UNLIFT-UPDATER restart
+      systemd:
+        name: '{{item}}'
+        state:  restarted
+      with_items:
+        - 'unlift'
+        - 'unlift-updater'
+      
+    - name: Push NTP time to motherboard time
+      shell:   hwclock --systohc
+
+    - name: ntpq "-P"
+      shell:  ntpq -p
+      register: ntpq
+    - debug:  var=ntpq.stdout_lines
+
+    - name: MOTHERBOARD time
+      shell:  hwclock | cut -d "." -f 1
+      register: hw_time
+    - debug:  var=hw_time.stdout
+
+    - name: OS(NTP) time
+      shell:  date +"%Y-%m-%d %H:%M:%S"
+      register: hw_time
+    - debug:  var=hw_time.stdout

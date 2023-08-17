@@ -1,0 +1,9 @@
+- name: Add hosts entries to /etc/hosts on remote server
+  hosts: sup2    
+  become: true
+  tasks:
+
+    - name: Copy list file to remote server
+      shell:  cat /home/detect/ansible/nginx/list | sudo tee -a /etc/hosts
+
+    

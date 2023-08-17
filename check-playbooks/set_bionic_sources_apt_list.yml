@@ -1,0 +1,23 @@
+---
+- name: Put bionic 18.04 /etc/apt/sources.list into remote hosts back + update
+  hosts: all
+  tasks:
+    - name: Check wether it's 18.04 or not
+      shell: lsb_release -r | awk '{print $2}'
+      register: release
+      failed_when: release.stdout != '18.04'
+
+    - name: Copy correct sources.list
+      copy:
+        src: /mnt/distr/ansible/ubuntu1804_repos/sources.list
+        dest: /etc/apt/sources.list
+      become: yes
+
+    - name: apt update
+      shell: sudo apt update
+    
+    - name: rm sources.list
+      file:
+        path: /etc/apt/sources.list
+        state: absent
+      become: yes

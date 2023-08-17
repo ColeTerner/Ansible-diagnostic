@@ -1,0 +1,73 @@
+---
+- name: Check sound where BIT-RADIO is installed
+  hosts:  all
+
+  tasks:
+
+  #1)Access to remote srv(UR)
+  - name: Check access to this server (UR only)
+    shell:  nc -vz -w1 minirose.tdera.ru 48710
+    register: minirose
+    ignore_errors:  yes
+  - debug:  var=minirose.stderr
+
+  #2)Check sound throgh CURL
+  - name: Check sound through API curl
+    shell:  "curl --header \"Content-Type: application/json\" --request POST --data '' http://localhost:5477/test"
+    register: curl
+  - debug:  var=curl.stdout_lines
+
+  #3)Print out all warning_* logs for the week (zgrep)
+  - name: Print out all warning_*
+    shell:  zgrep warning_ /var/log/syslog*
+    register: logs
+  - debug:  var=logs.stdout_lines
+
+  #4)Check sudo crontab -l
+  - name: Check root crontab
+    shell: sudo crontab -l
+    register: cron
+    become: yes
+  - debug:  var=cron.stdout_lines
+
+  #5)Check bit-alert installed
+  - name: Check services are installed
+    systemd:
+      name: "{{item}}"
+      state: restarted
+      enabled:  yes
+    with_items:
+      - bit-alert
+      - bit-radio
+      - bit-alert-client
+    become: yes
+
+  #6)Check bit-aler running
+  - name: Check services are running
+    systemd:
+      name: "{{item}}"
+      state:  started
+      enabled:  yes
+    with_items:
+      - bit-alert
+      - bit-radio
+      - bit-alert-client
+    become: yes
+
+  #7)Check SOUND errors across all logs
+  - name: Check SOUND errors in all logs
+    shell:  zgrep SOUND /var/log/syslog* | tail -n 100
+    register: sound
+  - debug:  var=sound.stdout_lines
+
+  #8)Check logs of services
+
+  - name: Check service's logs
+    shell: journalctl -u "{{item}}" | tail -n 100
+    register: service
+    debug:
+      var: service.stdout_lines
+    with_items:
+      - bit-alert
+      - bit-radio
+      - bit-alert-client

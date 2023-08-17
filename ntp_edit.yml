@@ -1,0 +1,42 @@
+---
+- name: Try things
+  hosts:  all
+  vars:
+    ntp1: 'ntp0.ntp-servers.net'
+    ntp2: '192.168.103.1'
+  become: yes
+  tasks:
+    
+    - name: echo "server ntp1" | sudo tee /etc/ntp.conf
+      shell: echo "server {{ntp1}}" | sudo tee /etc/ntp.conf
+      
+
+    - name: echo "server ntp1" | sudo tee /etc/ntp.conf
+      shell: echo "server {{ntp2}}" | sudo tee -a /etc/ntp.conf
+      
+    - name: stop ntp
+      systemd:
+        name: ntp
+        state:  stopped
+
+    - name: ntpd -gq sync time
+      shell:  ntpd -gq
+      async:  10
+      ignore_errors:  yes
+      
+    - name: restart services ntp,unlift,uynlift-updater
+      systemd:
+        name: "{{item}}"
+        state:  restarted
+      with_items:
+        - ntp
+        - unlift
+        - unlift-updater
+      tags:  service
+
+    - name: Check NTP availability
+      shell:  ntpq -p
+      register: availability
+      tags:  service
+    - debug:  var=availability.stdout_lines
+      tags:  service

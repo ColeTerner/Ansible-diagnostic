@@ -1,0 +1,27 @@
+---
+- name: Too many open files - Check
+  hosts:  all
+  become: yes
+  tasks:
+
+    - name: Check user limit
+      shell:  ulimit
+      register: user_limit
+    - debug:  var=user_limit.stdout
+
+    - name: Check KERNEL limit
+      shell:  sysctl fs.file-max | awk '{print $3}'
+      register: kernel_limit
+    - debug:  var=kernel_limit.stdout
+
+    - name: lsof
+      shell:  sudo lsof | wc -l
+      register: lsof
+    - debug:  var=lsof.stdout
+
+    - name: ASSERT lsof > kernel_limit
+      assert:
+        that:
+          - lsof.stdout < kernel_limit.stdout
+        fail_msg: 'KERNEL limit is BLOCKING NUMBER OF OPEN FILES'
+    

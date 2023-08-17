@@ -1,0 +1,70 @@
+---
+- name: set x264
+  hosts: all
+  #become: yes
+
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    camera_login: "admin"
+    camera_password: "admin123"
+    base_ip: "192.168.1.99"
+
+  tasks:
+    - name: Извлеките последний октет, увеличьте его и сохраните.
+      set_fact: 
+        octet1={{base_ip.split('.')[3] | int + 1 }}
+        octet2={{base_ip.split('.')[3] | int + 2 }}
+        octet3={{base_ip.split('.')[3] | int + 3 }}
+        octet4={{base_ip.split('.')[3] | int + 4 }}
+        octet5={{base_ip.split('.')[3] | int + 5 }}
+
+    - debug: 
+        msg:
+        - "kamera1: {{ octet1 }}"
+        - "kamera2: {{ octet2 }}"
+        - "kamera3: {{ octet3 }}"
+        - "kamera4: {{ octet4 }}"
+        - "kamera5: {{ octet5 }}"
+
+
+    - name: Добавить увеличенный октет к первым 3 октетам
+      set_fact: 
+        new_ip1="{{ base_ip | regex_replace('(^.*\.).*$', '\\1') }}{{ octet1 }}"
+        new_ip2="{{ base_ip | regex_replace('(^.*\.).*$', '\\1') }}{{ octet2 }}"
+        new_ip3="{{ base_ip | regex_replace('(^.*\.).*$', '\\1') }}{{ octet3 }}"
+        new_ip4="{{ base_ip | regex_replace('(^.*\.).*$', '\\1') }}{{ octet4 }}"
+        new_ip5="{{ base_ip | regex_replace('(^.*\.).*$', '\\1') }}{{ octet5 }}"
+
+
+    - debug: 
+        msg:
+        - "kamera1 ip: {{ new_ip1 }}"
+        - "kamera2 ip: {{ new_ip2 }}"
+        - "kamera3 ip: {{ new_ip3 }}"
+        - "kamera4 ip: {{ new_ip4 }}"
+        - "kamera5 ip: {{ new_ip5 }}"
+
+
+#проверка 1 камеры магазина, если наша, продолжаем выполнение
+    - shell: curl -g --anyauth --user 'admin:Admin12345' 'http://{{ new_ip1 }}/cgi-bin/magicBox.cgi?action=getDeviceType'
+      register: type_camera1
+
+    - name: check type=IPC-HDBW2231R-ZS-S2
+      fail:
+        msg: kamera ne dahua!!!
+      when: type_camera1 == "type=IPC-HDBW2231R-ZS-S2"
+
+
+    - name: Set NTP.Enable, NTP.address, NTP.port, NTP.UpdatePeriod
+      shell:  |
+        curl -g --anyauth --user 'admin:Admin12345' 'http://{{ item }}/cgi-bin/configManager.cgi?action=setConfig&NTP.Enable=true'
+        curl -g --anyauth --user 'admin:Admin12345' 'http://{{ item }}/cgi-bin/configManager.cgi?action=setConfig&NTP.Address={{ ansible_host }}'
+        curl -g --anyauth --user 'admin:Admin12345' 'http://{{ item }}/cgi-bin/configManager.cgi?action=setConfig&NTP.Port={{ NTP_Port }}'
+        curl -g --anyauth --user 'admin:Admin12345' 'http://{{ item }}/cgi-bin/configManager.cgi?action=setConfig&NTP.UpdatePeriod={{ NTP_UpdatePeriod }}'
+      with_items:
+        - "{{ new_ip1 }}"
+        - "{{ new_ip2 }}"
+        - "{{ new_ip3 }}"
+        - "{{ new_ip4 }}"
+        - "{{ new_ip5 }}"
+      ignore_errors: True

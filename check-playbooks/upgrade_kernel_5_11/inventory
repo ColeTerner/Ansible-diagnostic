@@ -1,0 +1,167 @@
+[all]
+#10.239.11.181
+10.42.20.209
+#10.35.11.85
+#1939 ansible_host=10.239.15.37 token=1baec32cd0
+#3152 ansible_host=10.96.75.192
+#3160 ansible_host=10.96.79.201 token=8579ba8a89
+#3163 ansible_host=10.96.81.77 token=
+
+#11.20.131.199 token=7dc1b0adaf
+#11.20.132.199 token=99215d87b4
+#11.20.204.199 token=0a32ebd96c
+#11.20.214.199 token=7b45523e95
+#11.20.238.199 token=f913ad44b8
+
+#10.239.15.37
+#3152 ansible_host=10.96.75.192
+#3102 ansible_host=10.96.50.195 token=75ba55d5d5
+#33149 ansible_host=10.96.74.72 token=50bcdf4b22
+#3167 ansible_host=10.96.83.72 token=69cf6f87d2
+
+
+#3082 ansible_host=10.96.40.197 token=1ec1a53395
+#3131 ansible_host=10.96.65.82 token=37aeca0234
+
+#10.239.13.181
+#3042 ansible_host=10.96.20.203 token=3ef5be7b01
+#10.239.16.37 token=f7c9cae3ca
+#10.239.4.101 token=e61f2a2e3f
+#10.239.5.21 token=6c21d3f0dd
+#3049 ansible_host=10.96.24.73 token=9546d67da3
+#3085 ansible_host=10.96.42.78 token=b7a30f4eab
+#3110 ansible_host=10.96.54.209 token=94d608e247
+
+#3095 ansible_host=10.96.47.126 token=d7a13f84b2
+#3047 ansible_host=10.96.23.69 token=79cff8b11a
+#10.239.16.181
+#10.239.15.197 token=32960205e3
+#1388 ansible_host=10.239.16.53 token=5b03dc2345
+#2233 ansible_host=10.239.16.37 token=f7c9cae3ca
+#1521 ansible_host=10.239.13.197 token=2a0917cf31
+
+#3153 ansible_host=10.96.76.69 token=1a0abf8c58
+#1746 ansible_host=10.239.13.165 token=330d177e3b
+#1331 ansible_host=10.239.13.229 token=946e31bb93
+#10.239.13.181 token=4a5177eecd
+#10.96.0.77 token=7602cd46a5
+#10.96.76.65 token=1a0abf8c58
+
+#2152 ansible_host=10.239.16.181 token=31af6450a4
+#0624 ansible_host=10.239.15.229 token=a814905523
+#0130 ansible_host=10.239.16.21 token=8eadc2cc9e
+
+
+#10.239.10.181 token=e8f19e1a73
+#10.239.15.197 token=32960205e3
+#10.239.10.149 token=32960205e3
+#10.239.10.213
+#10.239.11.85
+#10.239.7.181 token=b181c2b020
+#10.239.8.181
+#3139 ansible_host=10.96.69.68 token=33e2045e0a
+#3009 ansible_host=10.96.4.67 token=7050edb02b
+
+
+#0845 ansible_host=10.239.11.245 token=fe65d0f402
+#0493 ansible_host=10.239.14.53
+#0629 ansible_host=10.239.9.213
+#0667 ansible_host=10.239.2.53
+#0870 ansible_host=10.239.15.133
+#0997 ansible_host=10.239.5.69
+#1180 ansible_host=10.239.3.165
+#1211 ansible_host=10.239.3.149
+#1525 ansible_host=10.239.11.101
+#2272 ansible_host=10.239.0.21
+#2679 ansible_host=10.239.9.37
+
+#3009 ansible_host=10.96.4.67 token=7050edb02b
+#10.83.11.20 token=f641448a1e
+#3139 ansible_host=10.96.69.126 token=33e2045e0a
+#3187 ansible_host=10.96.93.77 token=67918c4a87
+#3165 ansible_host=10.96.82.69 token=787bbeff13
+
+#10.239.11.117 token=9082143062
+#1766 ansible_host=10.239.11.69 token=9082143062
+#3122 ansible_host=10.96.60.203 token=e85f2f940a
+#3173 ansible_host=10.96.86.77 token=16c3f375f1
+
+#10.239.16.117 token=9082143062
+#10.96.47.126
+#10.239.1.213 token=379ebd4d1e
+#10.239.15.85 token=19e50cfdcb
+#10.96.69.126
+#10.96.93.77
+#10.96.77.254
+#10.96.75.254
+#3106 ansible_host=10.96.52.254
+#3122 ansible_host=10.96.60.254
+#3164 ansible_host=10.96.81.254
+#3173 ansible_host=10.96.86.126
+
+
+#10.71.11.20
+#10.116.11.20 token=a3f5fdbca8
+#3009 ansible_host=10.96.4.126 token=7050edb02b
+#3164 ansible_host=10.96.81.254 token=4cd428b48c
+#3002 ansible_host=10.96.0.203 token=d764875675
+#3103 ansible_host=10.96.51.75 token=65d53d8b1d
+#183 ansible_host=10.116.11.20 token=a3f5fdbca8
+#237 ansible_host=10.19.182.145 token=03426d01f1
+#39 ansible_host=10.16.158.145 token=9285d7d4dc
+#98 ansible_host=10.17.138.145 token=c6c38d3c3b
+
+#2227 ansible_host=10.239.10.229 token=3d73bca6d4
+#89 ansible_host=10.17.102.145 token=a631e96e2a
+#184 ansible_host=10.18.226.145 token=0227e63cf4
+#10.239.4.37 token=3207d58c9b
+#10.96.77.254 token=1a9a34b968
+#405 ansible_host=10.83.11.20 token=f641448a1e
+#5 ansible_host=10.0.5.240 token=c31f62388b
+#929 ansible_host=10.33.73.209 token=84981d1810
+#192.168.10.130 token=6666wwww sleep_seconds=1
+#192.168.10.131 sleep_seconds=6
+#0931 ansible_host=10.239.8.69 token=e77196041b
+#620 ansible_host=10.32.20.85 token=ee70785ef2
+#1319 ansible_host=10.34.207.85 token=816ae949ab
+#812 ansible_host=10.32.212.209 token=30851f7ac0
+#3530 ansible_host=10.43.114.209 token=2b4d6a6ddb
+#86 ansible_host=10.17.90.145 token=1b820cab84
+#22 ansible_host=10.0.22.215 token=a237ec5e55
+#201 ansible_host=10.19.38.145 token=dd83300448
+#831 ansible_host=10.28.254.209 token=e55a2779ee
+#2227 ansible_host=10.239.10.229 token=3d73bca6d4
+#3103 ansible_host=10.96.51.126
+#3161 ansible_host=10.96.80.126 token=7055187e3b
+#3522 ansible_host=10.43.106.209 token=7609e3d41c
+#748 ansible_host=10.32.148.209 token=a2c2ccfe62
+#10.96.82.69 token=787bbeff13
+#816 ansible_host=10.32.216.209 token=07c2d5a912
+#812 ansible_host=10.32.212.209 token=30851f7ac0
+#192.168.10.63 token=81876f0704
+
+#0493 ansible_host=10.239.14.53 token=d2ff36becc
+#137 ansible_host=10.18.38.145 token=b69c17c190
+#214 ansible_host=10.0.214.247 token=f621717330
+#10.239.2.53
+#2383 ansible_host=10.239.7.69 token=5aa0a51ae3
+#1561 ansible_host=10.239.2.149 token=282b3c462b
+#2349 ansible_host=10.239.9.117 token=a7da9ef929
+#3568 ansible_host=10.32.153.85 token=99ccfde068
+#163 ansible_host=10.0.163.247 token=4db142bae2
+#200 ansible_host=10.19.34.80 token=92ede5d7c8
+#1440 ansible_host=10.35.72.85 token=052b935b76
+#116 ansible_host=10.17.210.145 token=fd20ddef91
+#1033 ansible_host=10.239.14.117 token=a85886228f
+#10.96.29.254
+
+
+[all:vars]
+ansible_user=detect
+become-user=root
+ansible_password=detect-pwd
+ansible_become_pass=detect-pwd
+ansible_sudo_pass=detect-pwd
+license_ntls_server=face452k.bit-tech.co:3157
+ansible_python_interpreter=/usr/bin/python3
+timesrv=0.pool.ntp.org

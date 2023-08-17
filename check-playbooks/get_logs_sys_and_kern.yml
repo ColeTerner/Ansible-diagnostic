@@ -1,0 +1,70 @@
+---
+- name: Gather logs from remote host
+  hosts:  all
+  tasks:
+    # - name: Get date
+    #   shell:  date +%F
+    #   register: date
+    # - debug:  var=date.stdout
+
+    - name: mkdir folder /home/{{ ansible_user }}/logs
+      shell:  mkdir /home/{{ansible_user}}/logs
+      ignore_errors:  yes
+
+    - name: Copy all logs to this folder
+      copy:
+        src:  /var/log/{{ item }}
+        dest: /home/{{ ansible_user }}/logs/
+      with_items:
+        - syslog
+        - syslog.1
+        - syslog.2.gz
+        - syslog.3.gz
+        - syslog.4.gz
+        - syslog.5.gz
+        - syslog.6.gz
+        - syslog.7.gz
+        - kern.log
+        - kern.log.1
+        - kern.log.2.gz
+        - kern.log.3.gz
+        - kern.log.4.gz
+      ignore_errors:  yes
+
+    - name: unarchive rest of logs
+      shell:  gzip -d /home/{{ ansible_user }}/logs/{{ item }}
+      with_items:
+        - syslog.2.gz
+        - syslog.3.gz
+        - syslog.4.gz
+        - syslog.5.gz
+        - syslog.6.gz
+        - syslog.7.gz
+        - kern.log.2.gz
+        - kern.log.3.gz
+        - kern.log.4.gz
+      become: yes
+      ignore_errors:  yes
+
+    - name: compress /home/{{ansible_user}}/logs
+      archive:
+        path: /home/{{ansible_user}}/logs
+        dest: /home/{{ansible_user}}/logs-{{ token }}.tgz
+      
+    - name: Pull logs from remote server
+      synchronize:
+        archive:  false
+        mode: pull
+        src:  /home/{{ ansible_user }}/logs-{{ token }}.tgz
+        dest: /mnt/distr/
+
+    
+      
+
+        
+
+        
+          
+
+        
+          

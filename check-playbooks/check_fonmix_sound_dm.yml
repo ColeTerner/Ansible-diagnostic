@@ -1,0 +1,28 @@
+---
+- name: Fonmix sound DM check
+  hosts: all
+  become: yes
+  tasks:
+
+    - name: Fonmix API check
+      shell: curl http://192.168.212.11:8081/api/external/
+      register: fonmix
+      failed_when: '"Failed to connect" in fonmix'
+    - debug: var=fonmix.stdout_lines
+
+
+    - name: Check current root crontab
+      shell:  crontab -u root -l
+      register: root_cron
+      ignore_errors:  yes
+    - debug:  var=root_cron.stdout_lines
+
+    - name: grep logs ERROR
+      shell: grep 'Playing sound' /var/log/syslog*
+      register: connect_error
+    - debug: var=connect_error.stdout_lines
+
+    - name: grep SENT
+      shell: zgrep "SOUND PLAYING" /var/log/syslog | grep SENT | head -n 100
+      register: sent
+    - debug: var=sent.stdout_lines

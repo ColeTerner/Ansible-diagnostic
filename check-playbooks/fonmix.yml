@@ -1,0 +1,33 @@
+---
+- name: Check DM fonmix
+  hosts:  all
+  ignore_errors:  yes
+  tasks:
+
+    - name: Check proxy fonmix 192.168.212.11
+      shell:  curl http://192.168.212.11:8081/api/external/
+      register: fonmix_11
+    - debug:  var=fonmix_11.stdout_lines
+
+    - name: Check proxy fonmix 192.168.212.12
+      shell:  curl http://192.168.212.12:8081/api/external/
+      register: fonmix_12
+    - debug:  var=fonmix_12.stdout_lines
+
+    - name: read IP of fonmix
+      pause:
+        prompt: "Write IP of the FONMIX"
+      register: ip
+    - debug:  var=ip.stdout
+
+    - name: read PORT of fonmix
+      pause:
+        prompt: "Write PORT of the FONMIX"
+      register: port
+    - debug:  var=port.stdout
+
+    - name: Check CUSTOM fonmix
+      shell:  curl http://{{ip.stdout}}:{{port.stdout}}/api/external/
+      register: custom_fonmix
+    - debug:  var=custom_fonmix.stdout_lines
+

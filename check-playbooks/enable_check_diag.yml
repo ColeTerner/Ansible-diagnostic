@@ -1,0 +1,52 @@
+---
+- name: 12
+  hosts: all
+
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+
+    - name: Create task on cron
+      cron:
+        name: check
+        special_time: hourly
+        user: root
+        job: 'python3 /opt/unlift/unlift_proxy/unlift_diag.py -c /etc/unlift.ini|logger'
+        state: present
+      become: yes
+
+    - name: cat /etc/unlift-updater.ini
+      shell:  cat /etc/unlift-updater.ini | grep currentversion
+      register: proxy_version
+      become: yes
+    - debug:  var=proxy_version.stdout
+
+#    - name: Set currentversion=1
+#      replace:
+#        path: /etc/unlift-updater.ini
+#        regexp: 'currentversion = .*'
+#        replace:  'currentversion = 1'
+#      when: proxy_version.stdout != 1
+#      become: yes
+
+#    - name: cat /etc/unlift-updater.ini
+#      shell:  cat /etc/unlift-updater.ini | grep currentversion
+#      register: proxy_version_1
+#      become: yes
+#    - debug:  var=proxy_version_1.stdout
+
+    - name: MANUALLY DO CHECK 
+      shell:  python3 /opt/unlift/unlift_proxy/unlift_diag.py -c /etc/unlift.ini
+      register: checky
+      become: yes
+    - debug:  var=checky.stdout_lines
+    
+
+    - name: restart unlift unlift-updater
+      systemd:
+        name: "{{ item }}"
+        state:  restarted
+      with_items:
+        - unlift
+        - unlift-updater
+      become: yes

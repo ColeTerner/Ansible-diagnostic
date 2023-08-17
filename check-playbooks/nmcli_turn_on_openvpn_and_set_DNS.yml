@@ -1,0 +1,36 @@
+---
+- name: nmcli manage connection OpenVPN and set DNS
+  hosts:  all
+  become: yes
+  tasks:
+
+    - name: Install nmcli (network-manager)
+      apt:
+        name: network-manager
+        state:  present
+
+    - name: Get name of the OpenVPN connection
+      shell:  nmcli con | grep vpn | awk '{print $1}'
+      register: openvpn_name
+    - debug:  var=openvpn_name.stdout
+
+    - name: Turn ON OpenVPN connection
+      command:  nmcli con up id '{{ openvpn_name.stdout }}'
+      register: status
+    - debug:  var=status.stdout_lines
+
+    - name: Set DNS to local IP(not vpn)
+      nmcli:
+        conn_name:  '{{ item }}'
+        type: ethernet
+        dns4:
+          - 8.8.8.8
+          - 1.1.1.1
+        state:  present
+      with_items:
+        - 'Wired connection 1'
+        - 'Wired connection 2'
+      ignore_errors:  True
+
+
+      

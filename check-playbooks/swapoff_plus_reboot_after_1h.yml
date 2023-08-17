@@ -1,0 +1,20 @@
+---
+- name: Transfer and execute a script.
+  hosts: inst
+  remote_user: detect
+  tasks:
+
+    - name: Create task on cron
+      cron:
+        name: swapoff
+        special_time: reboot
+        user: root
+        job: 'sleep 60; sudo swapoff -a'
+        state: absent
+      become: yes
+
+    - name: Reboot a slow machine that might have lots of updates to apply
+      ansible.builtin.reboot:
+        reboot_timeout: 3600
+      become: yes
+

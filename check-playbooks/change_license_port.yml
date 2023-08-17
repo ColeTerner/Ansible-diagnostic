@@ -1,0 +1,63 @@
+---
+- name: new_ntls
+  hosts: all
+  remote_user: detect
+  tasks:
+
+    - name: SED findface-video-worker-cpu.ini
+      replace:
+        path: /etc/findface-video-worker-cpu.ini
+        regexp: 'ntls_addr.*'
+        replace: 'ntls_addr = {{license_ntls_server }}'
+      become: yes
+      ignore_errors:  yes
+
+    - name: SED findface-video-worker-gpu.ini
+      replace:
+        path: /etc/findface-video-worker-gpu.ini
+        regexp: 'ntls_addr.*'
+        replace: 'ntls_addr = {{license_ntls_server }}'
+      become: yes
+      ignore_errors:  yes
+
+    - name: SED findface-extraction-api.ini
+      replace:
+        path: /etc/findface-extraction-api.ini
+        regexp: 'license_ntls_server:.*'
+        replace: 'license_ntls_server: {{license_ntls_server }}'
+      become: yes
+
+    - name: restarted findface-extraction-api.service 
+      systemd:
+        name: findface-extraction-api.service
+        enabled: yes
+        masked: no
+        state: restarted
+      become: yes
+
+    - name: restarted findface-video-worker-cpu.service 
+      systemd:
+        name: findface-video-worker-cpu.service
+        enabled: yes
+        masked: no
+        state: restarted
+      become: yes
+      ignore_errors:  yes
+
+    - name: restarted findface-video-worker-gpu.service 
+      systemd:
+        name: findface-video-worker-gpu.service
+        enabled: yes
+        masked: no
+        state: restarted
+      become: yes
+      ignore_errors:  yes
+
+    - name: Restart several services(diff name of variable)
+      systemd:
+        name: "{{ item }}"
+        state:  restarted
+      with_items:
+        - unlift-updater
+        - unlift
+      become: yes

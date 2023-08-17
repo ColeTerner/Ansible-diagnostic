@@ -1,0 +1,116 @@
+---
+- name: preinstall checks
+  hosts: all
+  become: yes
+  #vars:
+    #script_bash_all_location: /mnt/distr/ansible/scripts/ubuntu_upgrade_to_1804
+  tasks:
+
+    #Stress test
+    - name: Add proxy
+      shell:  echo 'Acquire::http::Proxy "http://face452k.bit-tech.co:8105";'|sudo tee /etc/apt/apt.conf.d/00aptproxy
+      
+    - name: copy /etc/apt/source.list to remote /etc/apt/source.list
+      copy:
+        src:  /mnt/distr/ansible/ubuntu1804_repos/sources.list
+        dest: /etc/apt/sources.list
+      become: yes
+
+    - name: apt update
+      shell: apt update
+      ignore_errors: yes      
+
+    - name: apt install stress
+      apt:
+        name: stress
+        state:  present
+      
+
+    - name: Gather everything
+      shell:  |
+        echo "Disk: $(udisksctl  status|grep -v MODEL|grep -v "\-\-"|column -t|awk '{print $1,$2}'|head -n1)" 
+        echo "CPU: $(cat /proc/cpuinfo |grep "model name"|tail -n1|cut -d ":" -f2)"" with ""$(cat /proc/cpuinfo |grep -c processor)"" cores"
+        echo "RAM: "$(lshw -c memory | grep -A 8 "bank:" | grep product | awk '{print $2}')
+      register: output
+    - debug:  var=output.stdout_lines
+
+    - name: Get thread
+      shell:  cat /proc/cpuinfo |grep -c processor
+      register: thread
+    - debug:  msg="{{ thread.stdout }} thread cpu"
+
+    - name: Launch stress test
+      shell: stress --cpu "{{ thread.stdout }}" --io 4 --vm 15 --vm-bytes 1024M --timeout 10m
+      register: stress
+    - debug: var=stress.stdout_lines
+
+    #Check GPU
+    - name: Check GPU/CPU
+      shell: lspci | grep -E 'VGA|3D'
+      register: gpu
+    - debug: var=gpu.stdout
+
+    #Check ss451_EASY.run
+    - name: Check image
+      shell: ls -lah /install
+      register: image
+      ignore_errors:  yes
+    - debug: var=image.stdout_lines
+
+    - name: Check release version
+      shell:  lsb_release -r | awk {'print $2'}
+      register: ubuntu_release
+    - debug: var=ubuntu_release.stdout
+      failed_when:  ubuntu_release.stdout == "16.04"
+
+      # #Check UBUNTU VERSION
+      # - block:
+
+      #   - name: Check release version
+      #     shell:  lsb_release -r | awk {'print $2'}
+      #     register: ubuntu_release
+      #     failed_when:  ubuntu_release.stdout == "16.04"
+
+      # rescue:
+
+      #   - name: get Kernel packages
+      #     shell:  dpkg -l | grep $(uname -r) | awk '{print $2}'
+      #     register: hold
+        
+      #   - name: hold Kernel packages
+      #     shell:  apt-mark hold '{{ hold.stdout }}'
+      #     become: yes
+
+      #   - name: apt update && apt upgrade
+      #     shell:  apt update && apt upgrade
+      #     become: yes
+
+      #   - name: cd script of updating location on local host
+      #     shell:  cd '{{ script_bash_all_location }}'
+      #     delegate_to:  127.0.0.1
+
+      #   - name: populate list for all script
+      #     shell:  |
+      #       >list
+      #       echo '{{ ansible_host }}' > list
+      #     delegate_to:  127.0.0.1
+
+      #   - name: bash all
+      #     shell:  bash all
+      #     become: yes
+      #     delegate_to:  127.0.0.1
+
+      #   - name: Check lsb_release -r
+      #     shell:  lsb_release -r | awk '{print $2}'
+      #     register: new_release
+      #     fail_when:  new_release.stdout != '18.04'
+
+    #Removing source
+    - name: remove source.list
+      file:
+        path: /etc/apt/sources.list
+        state:  absent
+      become: yes
+  
+  
+

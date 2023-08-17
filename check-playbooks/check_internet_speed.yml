@@ -1,0 +1,24 @@
+---
+- name: Check internet speed of shop
+  hosts:  all
+  gather_facts: false  
+  tasks:
+
+  #TRACEROUTE 30 hops
+  - name: MTR(traceroute for Ubuntu) from remote machine to <face452k.bit-tech.co:8101>
+    shell:  mtr -r -c 10 --tcp --port 8101 face452k.bit-tech.co
+    register: traceroute
+
+  - name: Print traceroute
+    debug:
+      var:  traceroute.stdout_lines
+
+  #Run speedtest through curl -> API (.py) | python3
+
+  - name: Run SPEEDTEST python script on the remote host
+    shell:  'curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3'
+    register: speed
+
+  - name: Print speed
+    debug:
+      var:  speed.stdout_lines

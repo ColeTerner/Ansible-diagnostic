@@ -1,0 +1,16 @@
+---
+- name: Check Zhiznbmart
+  hosts:  all
+  vars: 
+    ansible_python_interpreter: /usr/bin/python3
+  
+  tasks:
+  
+  - name: Create task on cron
+  cron:
+    name: check
+    special_time: hourly
+    user: root
+    job: 'python3 /opt/unlift/unlift_proxy/unlift_diag.py -c /etc/unlift.ini|logger'
+    state: present
+  become: yes

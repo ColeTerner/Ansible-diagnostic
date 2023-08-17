@@ -1,0 +1,16 @@
+---
+- name: Check ram
+  hosts:  all
+  tasks:
+
+    - name: RAM print
+      shell:  free -h
+      become: yes
+
+    - name: assert_mode
+      assert:
+        that: ansible_memtotal_mb > 10000
+        fail_msg: "8 GB RAM or less!!! STOPPING INSTALLATION..."
+        success_msg:  "The RAM check is succesfull"
+      become: yes
+      

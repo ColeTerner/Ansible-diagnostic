@@ -1,0 +1,95 @@
+---
+- name: Prepare sound settings to new shop newtwork
+  hosts:  all
+  gather_facts: false
+  become: yes
+  tasks:
+
+    
+    - name: Check current root crontab
+      shell:  crontab -u root -l
+      register: root_cron
+      ignore_errors:  yes
+    - debug:  var=root_cron.stdout_lines
+
+    - name: CLean sudo crontab -l
+      shell:  sudo crontab -r -u root
+
+    - name: Set cron reboot every 15 days
+      cron:
+        minute: 10
+        hour: 6
+        day:  15
+        month:  "*"
+        weekday:  "*"
+        job:  sudo reboot
+        state:  absent
+
+    - name: Fill the crontab
+      cron:
+        special_time: reboot
+        job:  '{{ item }}'
+        state:  absent
+      with_items:
+        - '@reboot sleep 30;sudo amixer -D default sset \"Auto-Mute Mode\" Disabled; sudo alsactl store'
+        - 'sleep 30; sudo amixer set Master playback 40\%;sudo amixer set Master unmute; sudo alsactl store'
+        - 'sleep 30; sudo amixer set Headphone playback 40\%;sudo amixer set Headphone unmute;sudo amixer -D default sset \"Auto-Mute Mode\" Disabled; sudo alsactl store'
+        - 'sleep 30; sudo amixer set Line playback 40\%;sudo amixer set Line unmute; sudo alsactl store'
+        - 'sleep 30; sudo amixer set Surround playback 40\%;sudo amixer set Surround unmute; sudo alsactl store'
+        - 'sleep 30; sudo amixer set Center playback 40\%;sudo amixer set Center unmute; sudo alsactl store'
+        - 'sleep 30; sudo amixer set LFE playback 40\%;sudo amixer set LFE unmute; sudo alsactl store'
+        - 'sleep 30; sudo amixer set Line Boost playback 40\%;sudo amixer set Line Boost unmute; sudo alsactl store'
+        - 'sleep 30; sudo amixer set S/PDIF unmute; sudo alsactl store'
+
+    # - name: Set cron reboot every 15 days
+    #   cron:
+    #     minute: 10
+    #     hour: 6
+    #     day:  15
+    #     month:  "*"
+    #     weekday:  "*"
+    #     job:  sudo reboot
+    #     state:  present
+
+    # - name: Fill the crontab
+    #   cron:
+    #     special_time: reboot
+    #     job:  '{{ item }}'
+    #     state:  present
+    #   with_items:
+    #     - 'sleep 30; sudo amixer set Master playback 40\%;sudo amixer set Master unmute; sudo alsactl store'
+    #     - 'sleep 30; sudo amixer set Headphone playback 40\%;sudo amixer set Headphone unmute;sudo amixer -D default sset \"Auto-Mute Mode\" Disabled; sudo alsactl store'
+    #     - 'sleep 30; sudo amixer set Line playback 40\%;sudo amixer set Line unmute; sudo alsactl store'
+    #     - 'sleep 30; sudo amixer set Surround playback 40\%;sudo amixer set Surround unmute; sudo alsactl store'
+    #     - 'sleep 30; sudo amixer set Center playback 40\%;sudo amixer set Center unmute; sudo alsactl store'
+    #     - 'sleep 30; sudo amixer set LFE playback 40\%;sudo amixer set LFE unmute; sudo alsactl store'
+    #     - 'sleep 30; sudo amixer set Line Boost playback 40\%;sudo amixer set Line Boost unmute; sudo alsactl store'
+    #     - 'sleep 30; sudo amixer set S/PDIF unmute; sudo alsactl store'
+
+    - name: reboot PC
+      reboot:
+      
+    - name: Check current root crontab
+      shell:  crontab -u root -l
+      register: root_cron
+      ignore_errors:  yes
+    - debug:  var=root_cron.stdout_lines
+
+    - name: Check by using ffprobe
+      shell:  ffprobe /opt/unlift/unlift_proxy/warning.mp3
+      register: test_sound
+    - debug:  var=test_sound.stdout_lines
+
+
+# - name: Fill the crontab
+    #   shell:  (crontab -l ; echo '{{ item }}') | sudo crontab -
+    #   with_items:
+    #     - '@reboot sleep 30; sudo amixer set Master playback 100\%;sudo amixer set Master unmute; sudo alsactl store'
+    #     - '@reboot sleep 30; sudo amixer set Headphone playback 100\%;sudo amixer set Headphone unmute;sudo amixer -D default sset \"Auto-Mute Mode\" Disabled; sudo alsactl store'
+    #     - '@reboot sleep 30; sudo amixer set Line playback 100\%;sudo amixer set Line unmute; sudo alsactl store'
+    #     - '@reboot sleep 30; sudo amixer set Surround playback 100\%;sudo amixer set Surround unmute; sudo alsactl store'
+    #     - '@reboot sleep 30; sudo amixer set Center playback 100\%;sudo amixer set Center unmute; sudo alsactl store'
+    #     - '@reboot sleep 30; sudo amixer set LFE playback 100\%;sudo amixer set LFE unmute; sudo alsactl store'
+    #     - '@reboot sleep 30; sudo amixer set Line Boost playback 100\%;sudo amixer set Line Boost unmute; sudo alsactl store'
+    #     - '@reboot sleep 30; sudo amixer set S/PDIF unmute; sudo alsactl store'
+    #     - '10 6 15 * * sudo reboot'

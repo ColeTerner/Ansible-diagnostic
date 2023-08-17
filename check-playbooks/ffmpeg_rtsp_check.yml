@@ -1,0 +1,18 @@
+---
+- name: Check RTSP-current with ffmpeg
+  hosts:  all
+  tasks:
+
+    - name: Input your RTSP
+      pause:
+        prompt: "Input RTSP of your cam"
+      register: rtsp
+    - debug:  var=rtsp.user_input
+
+    - name: Test RTSP cam
+      shell:  'ffmpeg -y -i {{rtsp.user_input}} -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+    #   register: ffmpeg
+    # - debug:  var=ffmpeg.stdout
+
+    

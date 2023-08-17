@@ -1,0 +1,10 @@
+---
+- hosts: linux
+  tasks:
+    - name: Allow port 
+      community.general.ufw:
+        rule: allow
+        port: 10050
+        src: 5.252.193.44
+        proto: tcp
+      become: yes

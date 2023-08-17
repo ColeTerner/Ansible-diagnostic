@@ -1,0 +1,83 @@
+---
+- name: Add new host to Zabbix
+  hosts: localhost
+  gather_facts: no
+  vars:
+    zabbix_host: "{{ ansible_ssh_host }}"
+    zabbix_api_url: "http://192.168.10.79/zabbix/api_jsonrpc.php"
+    zabbix_api_user: "Admin"
+    zabbix_api_password: "zabbix"
+    zabbix_hostgroup: "Linux servers"
+    zabbix_template: "Basic check_of_Linux_server"
+  tasks:
+    
+    - name: Login to Zabbix API
+      uri:
+        url: "{{ zabbix_api_url }}"
+        method: POST
+        headers:
+          Content-Type: 'application/json-rpc'
+          Accept: 'application/json-rpc'
+        body_format: json
+        body:
+          jsonrpc: 2.0
+          method: user.login
+          params:
+            user: "{{ zabbix_api_user }}"
+            password: "{{ zabbix_api_password }}"
+          id: 1
+        timeout: 30
+        validate_certs: false
+      register: zabbix_login_result
+
+    - name: Get host group ID
+      uri:
+        url: "{{ zabbix_api_url }}"
+        method: POST
+        body:
+          jsonrpc: "2.0"
+          method: "hostgroup.get"
+          params:
+            filter:
+              name: "{{ zabbix_hostgroup }}"
+          auth: "{{ zabbix_api_user }}:{{ zabbix_api_password }}"
+          id: 1
+        body_format: json
+        validate_certs: no
+      register: hostgroup_response
+      ignore_errors: yes
+
+    - debug:  var=hostgroup_response
+    #- debug:  var=hostgroup_response.json.result[0].groupid
+     
+
+
+    - name: Create host
+      uri:
+        url: "{{ zabbix_api_url }}"
+        method: POST
+        body:
+          jsonrpc: "2.0"
+          method: "host.create"
+          params:
+            host: "{{ zabbix_host }}"
+            interfaces:
+              - type: 1
+                main: 1
+                useip: 1
+                ip: "{{ zabbix_host }}"
+                dns: ""
+                port: "10050"
+            groups:
+              - groupid: "{{ hostgroup_response.json.result[0].groupid }}"
+            templates:
+              - templateid: "{{ zabbix_template }}"
+          auth: "{{ zabbix_api_user }}:{{ zabbix_api_password }}"
+          id: 1
+        body_format: json
+        validate_certs: no
+      register: host_create_response
+
+    - name: Debug output
+      debug:
+        var: host_create_response

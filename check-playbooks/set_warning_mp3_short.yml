@@ -1,0 +1,29 @@
+---
+- name: set_warning_mp3_short.yml
+  hosts:  all
+  vars:
+    sound:  /mnt/distr/ansible/warning.mp3
+  tasks:
+
+    - name: cp /etc/apt/sources.list ~/sources.list.bak
+      copy:
+        src: "{{sound}}"
+        dest: /opt/unlift/unlift_proxy/{{item}}
+      with_items:
+        - 'warning.mp3'
+        - 'warningf.mp3'
+      become: yes
+      ignore_errors:  yes
+
+    - name: cp /etc/apt/sources.list ~/sources.list.bak
+      copy:
+        src: "{{sound}}"
+        dest: /opt/bit/bit-radio/radio/alarm/{{item}}
+      with_items:
+        - 'warning_m.mp3'
+        - 'warning_f.mp3'
+        - 'notice.mp3'
+        - 'rec_female_1.mp3'
+        - 'rec_male_1.mp3'
+      become: yes
+      ignore_errors:  yes

@@ -1,0 +1,20 @@
+---
+- name: Transfer and execute a script.
+  hosts: all
+  remote_user: detect
+  vars:
+  tasks:
+
+    - name: Replace ntp
+      ansible.builtin.replace:
+        path: /etc/findface-video-worker-cpu.ini
+        regexp: 'skip_count = .*'
+        replace: 'skip_count = 1'
+      become: yes
+
+
+    - name: Restart service
+      ansible.builtin.service:
+        name: findface-video-worker-cpu
+        state: restarted
+      become: yes

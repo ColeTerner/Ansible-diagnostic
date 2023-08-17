@@ -1,0 +1,63 @@
+---
+- name: postinstall DM
+  hosts:  all
+  tasks:
+
+    - name: ping 1.1.1.1
+      shell:  ping -c 4 1.1.1.1
+      register: ping_dns
+    - debug:  var=ping_dns.stdout_lines
+    
+    - nmcli:
+        conn_name: Wired connection 1
+        type: ethernet
+        dns4:
+          - 77.88.8.88
+          - 1.1.1.1
+        state: present
+      become: yes
+
+    - nmcli:
+        conn_name: Wired connection 2
+        type: ethernet
+        dns4:
+          - 77.88.8.88
+          - 1.1.1.1
+        state: present
+      become: yes
+      ignore_errors: True
+
+    - name: dnssec
+      lineinfile:
+        path: /etc/systemd/resolved.conf
+        line: 'DNSSEC=no'
+        insertafter: EOF
+        backup: yes
+      become: yes
+
+    - name: restart resolver
+      service:
+        name: systemd-resolved.service
+        state: restarted
+      become: yes
+
+
+    - name: Add block
+      blockinfile:
+        path: /etc/hosts
+        state: present
+        insertbefore: "^127.0.0.1.*"
+        block: |
+          185.158.114.149 unlift.ru
+          5.252.193.80 face452k.bit-tech.co
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+      become: yes
+
+    - name: Reboot a slow machine that might have lots of updates to apply
+      ansible.builtin.reboot:
+        reboot_timeout: 3600
+      become: yes
+
+    
+
+      

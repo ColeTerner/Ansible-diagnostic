@@ -1,0 +1,82 @@
+---
+- name: Transfer and execute a script.
+  hosts: all
+  vars:
+    myuser: "detect"
+    mypassword: "detect-pwd"
+  tasks:
+
+    - name: sudo systemctl disable bit-alert.service bit-radio*
+      shell: sudo systemctl disable bit-alert.service bit-radio*
+      become: yes
+      ignore_errors: True
+      
+    - name: systemctl stop bit-alert.service bit-radio*
+      shell: systemctl stop bit-alert.service bit-radio*
+      become: yes
+      ignore_errors: True
+
+    - name: sudo rm -rf ~/dotnet*
+      shell: sudo rm -rf ~/dotnet*
+      become: yes    
+      ignore_errors: True
+      
+    - name: rm -rf /var/lib/dotnet
+      shell: rm -rf /var/lib/dotnet
+      become: yes
+      ignore_errors: True
+
+    - name: rm -rf /var/lib/dotnet
+      shell: rm -rf /var/lib/dotnet
+      become: yes
+      ignore_errors: True
+
+    - name: rm /etc/systemd/system/bit-radio.timer
+      shell: rm /etc/systemd/system/bit-radio.timer
+      become: yes
+      ignore_errors: True
+
+    - name: sudo rm /etc/xdg/autostart/bit-alert-client.desktop
+      shell: sudo rm /etc/xdg/autostart/bit-alert-client.desktop
+      become: yes    
+      ignore_errors: True
+      
+    - name: sudo rm /etc/bit-alert-api-settings.json
+      shell: sudo rm /etc/bit-alert-api-settings.json
+      become: yes
+      ignore_errors: True
+
+    - name: sudo rm /etc/bit-alert-api-settings.json
+      shell: sudo rm /etc/bit-alert-api-settings.json
+      become: yes
+      ignore_errors: True
+
+    - name: sudo rm /etc/bit-alert-client-settings.json
+      shell: sudo rm /etc/bit-alert-client-settings.json
+      become: yes
+      ignore_errors: True
+
+    - name: sudo rm /etc/bit-radio-api-settings.json
+      shell: sudo rm /etc/bit-radio-api-settings.json
+      become: yes    
+      ignore_errors: True
+
+    - name: sudo rm -rf /opt/bit/bit-alert*
+      shell: sudo rm -rf /opt/bit/bit-alert*
+      become: yes
+      ignore_errors: True
+
+    - name: sudo rm -rf /opt/bit/bit-radio*
+      shell: sudo rm -rf /opt/bit/bit-radio*
+      become: yes
+      ignore_errors: True
+
+# если убрать комент рискуешь положить систему!
+    # - name: sudo userdel -fr alert
+      # shell: sudo userdel -fr alert
+      # become: yes
+      # ignore_errors: True
+      
+    - name: Unconditionally reboot the machine with all defaults
+      ansible.builtin.reboot:
+      become: yes

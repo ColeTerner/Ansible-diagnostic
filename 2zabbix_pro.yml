@@ -1,0 +1,130 @@
+- hosts: all 
+  become: True
+  vars:
+    zabbix_agent_server:  zab.bit-tech.pro
+    zabbix_agent_serveractive:  zab.bit-tech.pro
+    #zabbix_ip=5.252.193.44
+    zabbix_url: https://zab.bit-tech.pro/
+    zabbix_api_use: true
+    zabbix_api_user:  Roman
+    zabbix_api_pass:  1234
+    zabbix_interface_port:  "10050"
+    zabbix_host_groups: 'Linux servers'
+    zabbix_link_templates:  ["Template OS Linux by Zabbix agent"]
+    zabbix_interface_type:  agent
+    zabbix_interface_use_ip:  "0"
+    zabbix_interface_ip:  ""
+    zabbix_host_description:  "My linux server"
+    zabbix_host_status: enabled
+  tasks:
+#    - name: Install agent
+#      include_role:
+#        name: community.zabbix.zabbix_agent 
+#      tags:
+#        - install
+ 
+    - name: Create a new host or update an existing host's info 
+      local_action:
+        #module: community.zabbix.zabbix_host
+        module: zabbix_host 
+        server_url: "{{ zabbix_url }}" 
+        login_user: "{{ zabbix_api_user }}" 
+        login_password: "{{ zabbix_api_pass }}" 
+        host_name: "{{ item }}"
+        visible_name: "{{ hostvars[item].zabbix_visible_name | default(item) }}" 
+        description: "{{   hostvars[item].zabbix_host_description | default('') }} OS: {{  hostvars[item].ansible_distribution | default('') }} {{  hostvars[item].ansible_distribution_version | default('') }}"
+        link_templates: "{{ hostvars[item].zabbix_link_templates }}" 
+        host_groups: "{{ hostvars[item].zabbix_host_groups }}"
+        status: "{{  hostvars[item].zabbix_host_status }}"
+        state: present 
+        inventory_mode: disabled 
+        validate_certs: false
+        tls_accept: 2 #PSK 
+        tls_connect: 2 
+        tls_psk_identity: "{{ tls_psk_identity }}"
+        tls_psk: "{{ tls_psk }}"
+        interfaces:
+          - type: "{{ hostvars[item].zabbix_interface_type }}" 
+            main: 1 
+            useip: "{{ hostvars[item].zabbix_interface_use_ip }}" 
+            ip: "{{ hostvars[item].zabbix_interface_ip }}" 
+            dns: "{{ item }}"
+            port: "{{ hostvars[item].zabbix_interface_port }}"
+      loop: "{{ groups['all'] }}" 
+      run_once: true 
+      tags:
+        - add-host
+         
+    - name: del string of the file zabbix_agentd.conf
+      lineinfile: 
+        path: /etc/zabbix/zabbix_agentd.conf
+        regexp: '^EnableRemoteCommands=0'
+        state: absent
+      become: yes
+
+    - name: del string of the file zabbix_agentd.conf
+      lineinfile: 
+        path: /etc/zabbix/zabbix_agentd.conf
+        regexp: '^LogRemoteCommands=0'
+        state: absent
+      become: yes
+
+    - name: add a new string at the end of the file zabbix_agentd.conf
+      lineinfile: 
+        path: /etc/zabbix/zabbix_agentd.conf
+        state: present
+        line: '{{ item }}'
+      with_items:
+        - '###ANSIBLE MANEGE###'
+        - 'TLSPSKFile=/etc/zabbix/zabbix_agentd.psk'
+        - 'TLSConnect=psk'
+        - 'TLSAccept=psk'
+        - 'TLSPSKIdentity=PSK 01015' #наименование ключа доступа
+        - 'EnableRemoteCommands=1'
+        - 'LogRemoteCommands=1'
+      become: yes
+      tags: config
+
+    - name: SED 'Server=' in zabbix-agent config
+      replace:
+        path: /etc/zabbix/zabbix_agentd.conf
+        regexp: 'Server=.*'
+        replace: 'Server={{zabbix_agent_server}}'
+      become: yes
+      tags: config
+
+    - name: SED 'ServerActive=' in zabbix-agent config
+      replace:
+        path: /etc/zabbix/zabbix_agentd.conf
+        regexp: 'ServerActive=.*'
+        replace: 'ServerActive={{zabbix_agent_serveractive}}'
+      become: yes
+      tags: config
+
+    - name: Touch a file zabbix_agentd.psk 
+      ansible.builtin.file:
+        path: /etc/zabbix/zabbix_agentd.psk
+        state: touch
+        mode: '0644'
+      become: yes
+
+    - name: zabbix_agentd.psk configuration
+      lineinfile:
+        path: /etc/zabbix/zabbix_agentd.psk
+        state: present
+        line: "{{ tls_psk }}"
+      become: yes
+        
+    - name: Allow incoming access 
+      ufw:
+        rule: allow
+        port: 10050
+        src: 5.252.193.44
+        proto: tcp
+      become: yes
+
+    - name: restarted service zabbix-agent.service, in all cases
+      ansible.builtin.systemd:
+        name: zabbix-agent
+        state: restarted
+      become: yes

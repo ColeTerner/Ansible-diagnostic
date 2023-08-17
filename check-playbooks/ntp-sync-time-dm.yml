@@ -1,0 +1,31 @@
+---
+- name: Try things
+  hosts:  all
+  become: yes
+  tasks:
+
+    - name: stop ntp
+      systemd:
+        name: ntp
+        state:  stopped
+
+    - name: ntpd -gq sync time
+      shell:  ntpd -gq
+      async:  10
+      ignore_errors:  yes
+            
+    - name: restart services ntp,unlift,uynlift-updater
+      systemd:
+        name: "{{item}}"
+        state:  restarted
+      with_items:
+        - ntp
+        - unlift
+        - unlift-updater
+      
+
+    - name: Check NTP availability
+      shell:  ntpq -p
+      register: availability
+    - debug:  var=availability.stdout_lines
+      

@@ -1,0 +1,21 @@
+---
+- name: Change token
+  hosts:  all
+  tasks:
+    - name: Change 1 file - /etc/unlift.ini
+      shell: sed -i 's/.*unlift_token*.*/unlift_token={{token}}/' /etc/unlift.ini
+      become: yes
+
+    - name: Change 1 file - /etc/unlift-updater.ini
+      shell: sed -i 's/.*unlifttoken*.*/unlifttoken={{token}}/' /etc/unlift-updater.ini
+      become: yes
+
+    - name: Restart unlift
+      systemd:
+        name: "{{ item }}"
+        state: restarted
+      become: yes
+      with_items:
+        - unlift
+        - unlift-updater
+      

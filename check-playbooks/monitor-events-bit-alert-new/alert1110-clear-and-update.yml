@@ -1,0 +1,291 @@
+---
+- name: Transfer and execute a script.
+  hosts: all
+  vars:
+    myuser: "detect"
+    mypassword: "detect-pwd"
+  tasks:
+
+    # - name: version compliance check 
+    #   shell: strings /opt/bit/bit-alert-client/bit-alert-client.dll | egrep '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'
+    #   register: cat_alert_ver
+
+    # - name: file check bit-alert-client.dll
+    #   fail:
+    #     msg: system contains bit-alert 1.1.0.1 stop installation!
+    
+    #   when: cat_alert_ver == "1.1.0.1"
+
+    - name: Transfer gz alert09-12-22.tar
+      synchronize:
+        src: ../../bit-alert1.1.1.0/alert09-12-22.tar
+        dest: /home/{{ansible_user}}/
+        partial: yes
+
+    - name: Transfer gz dotnet6.tar
+      synchronize:
+        src: ../../bit-alert1.1.1.0/dotnet6.tar
+        dest: /home/{{ansible_user}}/
+        partial: yes
+
+
+# нет файла playtest.sh
+    # - name: Transfer playtest.sh !!!!!!!!!!
+    #   ansible.posix.synchronize:
+    #     src: playtest.sh
+    #     dest: /mnt/c/Users/detect/bit-alert1.1.0.1/
+    #     partial: yes
+    - name: sudo systemctl disable bit-alert.service bit-radio*
+      shell: sudo systemctl disable bit-alert.service bit-radio*
+      become: yes
+      ignore_errors: True
+      
+    - name: systemctl stop bit-alert.service bit-radio*
+      shell: systemctl stop bit-alert.service bit-radio*
+      become: yes
+      ignore_errors: True
+
+    - name: rm -rf /var/lib/dotnet
+      shell: rm -rf /var/lib/dotnet
+      become: yes
+      ignore_errors: True
+
+    - name: rm -rf /var/lib/dotnet
+      shell: rm -rf /var/lib/dotnet
+      become: yes
+      ignore_errors: True
+
+    - name: rm /etc/systemd/system/bit-radio.timer
+      shell: rm /etc/systemd/system/bit-radio.timer
+      become: yes
+      ignore_errors: True
+
+    - name: sudo rm /etc/xdg/autostart/bit-alert-client.desktop
+      shell: sudo rm /etc/xdg/autostart/bit-alert-client.desktop
+      become: yes    
+      ignore_errors: True
+      
+    - name: sudo rm /etc/bit-alert-api-settings.json
+      shell: sudo rm /etc/bit-alert-api-settings.json
+      become: yes
+      ignore_errors: True
+
+    - name: sudo rm /etc/bit-alert-client-settings.json
+      shell: sudo rm /etc/bit-alert-client-settings.json
+      become: yes
+      ignore_errors: True
+
+    - name: sudo rm /etc/bit-radio-api-settings.json
+      shell: sudo rm /etc/bit-radio-api-settings.json
+      become: yes    
+      ignore_errors: True
+
+    - name: sudo rm -rf /opt/bit/bit-alert*
+      shell: sudo rm -rf /opt/bit/bit-alert*
+      become: yes
+      ignore_errors: True
+
+    - name: sudo rm -rf /opt/bit/bit-radio*
+      shell: sudo rm -rf /opt/bit/bit-radio*
+      become: yes
+      ignore_errors: True
+
+    # - name: sudo userdel -fr alert
+    #   shell: sudo userdel -fr alert
+    #   become: yes
+    #   ignore_errors: True
+      
+    # - name: Reboot a slow machine that might have lots of updates to apply
+    #   reboot:
+    #     reboot_timeout: 20000
+    #   become: yes
+
+    #DOTNET-INSTALL START
+
+    - name: unzip encrypted zip tar -xvf dotnet6.tar -C ~/
+      unarchive:
+        src: /home/{{ ansible_user }}/dotnet6.tar
+        dest: /home/{{ ansible_user }}/
+        remote_src: yes
+      become: yes
+
+
+    - name: cp ~/dotnet/dotnet.list /etc/apt/sources.list.d/
+      copy:
+        src: /home/{{ansible_user}}/dotnet/dotnet.list
+        dest: /etc/apt/sources.list.d/
+        remote_src: yes
+      become: yes
+
+    - name: mkdir directory /var/lib/dotnet/
+      ansible.builtin.file:
+        path: /var/lib/dotnet/
+        state: directory
+        recurse: yes
+      become: yes
+
+    - name: cp -r ~/dotnet/ /var/lib/dotnet/
+      copy:
+        src: /home/{{ansible_user}}/dotnet/
+        dest: /var/lib/dotnet/
+        remote_src: yes
+        directory_mode: yes
+      become: yes
+
+    - name: Run the equivalent of "apt-get update" as a separate step
+      ansible.builtin.apt:
+        update_cache: yes
+      become: yes
+      ignore_errors: True
+    
+    - name: sudo apt -y install aspnetcore-runtime-5.0
+      shell: sudo apt -y install aspnetcore-runtime-5.0
+      become: yes
+
+    - name: sudo apt -y install aspnetcore-runtime-6.0
+      shell: sudo apt -y install aspnetcore-runtime-6.0
+      become: yes
+
+#DOTNET-INSTALL END
+#ALERT-INSTALL START
+
+    - name: sudo adduser --quiet --disabled-password --gecos "" alert
+      shell: sudo adduser --quiet --disabled-password --gecos "" alert
+      become: yes
+      ignore_errors: True
+
+    - name: echo "alert:123" |sudo chpasswd
+      shell: echo "alert:123" |sudo chpasswd
+      become: yes
+      ignore_errors: True
+
+    - name: sudo tar -xvf alert09-12-22.tar -C /
+      unarchive:
+        src: /home/{{ ansible_user }}/alert09-12-22.tar
+        dest: /
+        remote_src: yes
+      become: yes
+
+    - name: sudo sed -i -e "s/#  AutomaticLoginEnable/  AutomaticLoginEnable/" /etc/gdm3/custom.conf -e "s/#  AutomaticLogin.*/  AutomaticLogin = alert/"
+      shell: sudo sed -i -e "s/#  AutomaticLoginEnable/  AutomaticLoginEnable/" /etc/gdm3/custom.conf -e "s/#  AutomaticLogin.*/  AutomaticLogin = alert/"
+      become: yes
+      ignore_errors: True
+      
+    - name: sed -i 's/^#Wayland/Wayland/' /etc/gdm3/custom.conf
+      shell: sed -i 's/^#Wayland/Wayland/' /etc/gdm3/custom.conf
+      become: yes
+      ignore_errors: True
+      
+
+    - name: rm /opt/bit/bit-alert/bin/logs/*
+      ansible.builtin.file:
+        path: /opt/bit/bit-alert/bin/logs/
+        state: absent
+      become: yes
+
+    - name: rm /opt/bit/bit-radio/data/logs/*
+      ansible.builtin.file:
+        path: /opt/bit/bit-radio/data/logs/
+        state: absent
+      become: yes
+
+    - name: systemctl disable bit-radio.service
+      systemd:
+        name: bit-radio.service
+        enabled: no
+      become: yes
+
+    - name: enable bit-radio.timer
+      systemd:
+        name: bit-radio.timer
+        enabled: yes
+      become: yes
+
+    - name: enable bit-alert
+      systemd:
+        name: bit-alert
+        enabled: yes
+      become: yes
+
+    # - name: Unconditionally reboot the machine with all defaults
+    #   ansible.builtin.reboot:
+    #   become: yes
+#ALERT-INSTALL END
+#CLEAR
+
+    - name: rm /home/{{ ansible_user }}/dotnet6.tar
+      ansible.builtin.file:
+        path: /home/{{ ansible_user }}/dotnet6.tar
+        state: absent
+      become: yes
+      ignore_errors: True
+    
+    - name: rm /home/{{ ansible_user }}/dotnet.tar
+      ansible.builtin.file:
+        path: /home/{{ ansible_user }}/dotnet.tar
+        state: absent
+      become: yes
+      ignore_errors: True
+
+    - name: rm /home/{{ ansible_user }}/alert08-06-21.tar
+      ansible.builtin.file:
+        path: /home/{{ ansible_user }}/dotnet6.tar
+        state: absent
+      become: yes
+      ignore_errors: True
+
+    - name: rm /home/{{ ansible_user }}/alert12-10-22.tar
+      ansible.builtin.file:
+        path: /home/{{ ansible_user }}/alert12-10-22.tar
+        state: absent
+      become: yes
+      ignore_errors: True
+
+    - name: rm /home/{{ ansible_user }}/dotnet-install.sh
+      ansible.builtin.file:
+        path: /home/{{ ansible_user }}/dotnet-install.sh
+        state: absent
+      become: yes
+      ignore_errors: True
+
+    - name: rm /home/{{ ansible_user }}/bit-client
+      ansible.builtin.file:
+        path: /home/{{ ansible_user }}/bit-client
+        state: absent
+      become: yes
+      ignore_errors: True
+
+    - name: rm /home/{{ ansible_user }}/bit-radio.timer
+      ansible.builtin.file:
+        path: /home/{{ ansible_user }}/bit-radio.timer
+        state: absent
+      become: yes
+      ignore_errors: True
+      
+    - name: Unconditionally reboot the machine with all defaults
+      ansible.builtin.reboot:
+      become: yes
+      
+      
+    - name: Check bit-radio service
+      systemd:
+        name: "{{ item }}"
+        state: started
+      with_items:
+        - bit-alert
+
+    - name: Check bit-radio.timer
+      shell:  systemctl status bit-radio.timer
+      register: timer
+    - debug:  var=timer.stdout_lines
+
+    - name: Check runned processes
+      shell: ps ax | grep bit-alert
+      register: alert
+      become: yes
+    - debug: var=alert.stdout_lines
+
+    - name: check user ALERT
+      shell:  w
+      register: user
+    - debug:  var=user.stdout_lines

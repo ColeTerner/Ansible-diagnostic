@@ -1,0 +1,11 @@
+---
+- name: Transfer ss451_easy.yml
+  hosts: all
+  tasks:
+
+  - name: Transfer ss451_easy.yml
+    synchronize:
+      src:  /mnt/distr/ansible/roles/451-transfer/files/ss451_easy.run
+      dest: /home/"{{ansible_user}}"/
+      rsync_opts:
+        - "-v"

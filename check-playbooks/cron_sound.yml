@@ -1,0 +1,41 @@
+---
+- name: Transfer and execute a script.
+  hosts: all
+  vars:
+    vol: 40
+  tasks:
+     - name: Transfer the mp3
+       copy: src=warning.mp3 dest=/home/{{ansible_user}} mode=0777
+
+     - name: reboot
+       reboot:
+       become: yes
+
+     - shell: |
+         (sudo crontab -l|grep -v amixer ;echo "@reboot sleep 30; sudo amixer set Master playback {{vol}}\%;sudo amixer set Master unmute;sudo amixer set Headphone playback {{vol}}\%;sudo amixer set Headphone unmute; sudo alsactl store")|sudo crontab -
+         sudo amixer set Master playback {{vol}}%;sudo amixer set Master unmute;sudo amixer set Headphone playback {{vol}}%;sudo amixer set Headphone unmute; sudo alsactl store
+         sudo cp warning.mp3 /opt/unlift/unlift_proxy/
+         sudo cp warning.mp3 /opt/unlift/unlift_proxy/warningf.mp3
+         sudo cp warning.mp3 /opt/bit/bit-radio/radio/alarm/warning_m.mp3 
+         sudo cp warning.mp3 /opt/bit/bit-radio/radio/alarm/warning_f.mp3
+         sudo cp warning.mp3 /opt/bit/bit-radio/radio/alarm/notice.mp3
+         sudo cp warning.mp3 /opt/bit/bit-radio/radio/alarm/rec_female_1.mp3
+         sudo cp warning.mp3 /opt/bit/bit-radio/radio/alarm/rec_male_1.mp3
+       become: yes
+       ignore_errors: yes
+
+     - name: reboot
+       reboot:
+       become: yes
+
+     - name: Check current root crontab
+       shell:  crontab -u root -l
+       register: root_cron
+       ignore_errors:  yes
+     - debug:  var=root_cron.stdout_lines
+
+     - name: Check by using ffprobe
+       shell:  ffprobe /opt/unlift/unlift_proxy/warning.mp3
+       register: test_sound
+     - debug:  var=test_sound.stdout_lines
+

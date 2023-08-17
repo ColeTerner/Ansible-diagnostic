@@ -1,0 +1,31 @@
+---
+- name: The face wasn't captured by Findface - check confidence
+  hosts:  all
+  tasks:
+
+  - name: Input the day of the incident 0-7
+    pause:
+      prompt: 'Input the day of the incident: 0-7'
+    register: day
+  - debug: var=day.user_input
+
+  - name: input hour
+    pause:
+      prompt: 'Input the HOUR of the incident: 00-23'
+    register: hour
+  - debug:  var=hour.user_input
+
+  - block:
+
+    - name: assert if day = 0
+      shell:  zgrep 'confidence is' /var/log/syslog.{{day.user_input}} | grep "{{hour.user_input}}:"
+      register: confidence
+    - debug:  var=confidence.stdout_lines
+
+    rescue:
+
+      - name: search TODAY log
+        shell:  zgrep 'confidence is' /var/log/syslog | grep "{{hour.user_input}}:"
+        register: today_confidence
+      - debug:  var=today_confidence.stdout_lines
+

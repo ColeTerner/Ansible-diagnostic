@@ -1,0 +1,56 @@
+---
+- name: Check who manufactured ip_cam for rtsp
+  hosts:  all
+
+  tasks:
+    - name: repeat ansible_host
+      debug:
+        var:  ansible_host
+
+    - name: first octet
+      shell:  echo "{{ ansible_host }}" | cut -d "." -f 1
+      register: oct1
+    - debug:  var=oct1.stdout
+
+    - name: second octet
+      shell:  echo "{{ ansible_host }}" | cut -d "." -f 2
+      register: oct2
+    - debug:  var=oct2.stdout
+    
+    - name: third octet
+      shell:  echo "{{ ansible_host }}" | cut -d "." -f 3
+      register: oct3
+    - debug:  var=oct3.stdout
+
+    - name: forth octet
+      shell:  echo "{{ ansible_host }}" | cut -d "." -f 4
+      register: oct4
+    - debug:  var=oct4.stdout
+
+    - name: ffmpeg check TRASSIR
+      shell:  'ffmpeg -y -i "rtsp://admin:admin@{{ oct1.stdout }}.{{ oct2.stdout }}.{{ oct3.stdout }}.{{ item }}/live/main" -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+      with_items:
+        - "{{ oct4.stdout | int + 1 }}"
+        - "{{ oct4.stdout | int + 2 }}"
+        - "{{ oct4.stdout | int + 3 }}"
+        - "{{ oct4.stdout | int + 4 }}"
+        - "{{ oct4.stdout | int + 5 }}"
+      ignore_errors:  yes
+      become: yes
+
+
+    - name: ffmpeg check DAHUA
+      shell:  'ffmpeg -y -i "rtsp://admin:admin@{{ oct1.stdout }}.{{ oct2.stdout }}.{{ oct3.stdout }}.{{ item }}/cam/realmonitor?channel=1&subtype=0" -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+      with_items:
+        - "{{ oct4.stdout | int + 1 }}"
+        - "{{ oct4.stdout | int + 2 }}"
+        - "{{ oct4.stdout | int + 3 }}"
+        - "{{ oct4.stdout | int + 4 }}"
+        - "{{ oct4.stdout | int + 5 }}"
+      ignore_errors:  yes
+      become: yes
+    
+    
+

@@ -1,0 +1,19 @@
+---
+- name: Add hosts
+  hosts: all
+  tasks:
+
+    - name: Add block
+      blockinfile:
+        path: /etc/hosts
+        state: present
+        insertbefore: "^127.0.0.1.*"
+        block: |
+          185.158.114.149 unlift.ru
+          5.252.193.80 face452k.bit-tech.co
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+      become: yes
+
+    - name: reboot
+      reboot:
+      become: yes

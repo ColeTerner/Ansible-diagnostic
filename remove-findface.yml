@@ -1,0 +1,200 @@
+---
+- name: 12
+  hosts: all
+  #become: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+#??? ?? ??????? ?????????? ??? ????? ??????????, ?? ??? ?? ?????
+#ansible-galaxy collection install ansible.posix
+  tasks:
+    - name: Pinging Host
+      action: ping
+    - name: Recursively remove directory
+      ansible.builtin.file:
+        path: /var/lib/ff451-repo
+        state: absent
+      become: yes
+      ignore_errors: True
+    - name: remove directory /etc/apt/sources.list.d
+      file:
+        path: /etc/apt/sources.list.d
+        state: absent
+      become: yes
+      ignore_errors: True
+    - name: remove directory /etc/apt/sources.list.d
+      file:
+        path: /install/
+        state: absent
+      become: yes
+      ignore_errors: True
+    - name: Create a directory /etc/apt/sources.list.d
+      file:
+        path: /etc/apt/sources.list.d
+        state: directory
+      become: yes
+      ignore_errors: True
+    - name: Apt -y --fix-broken install
+      shell: apt -y --fix-broken install
+      become: yes
+      ignore_errors: True
+    - name: Run the equivalent of "apt-get update" as a separate step
+      apt:
+        update_cache: yes
+      become: yes
+      ignore_errors: True
+    - name: install basic packages
+      apt:
+        update_cache: no
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - findface-repo
+        - findface-facerouter
+        - findface-sf-api
+        - findface-video-manager
+        - findface-video-worker-cpu
+        - findface-video-worker-gpu
+        - etcd
+        - memcached
+        - findface-extraction-api
+        - findface-counter
+        - python3-motor
+        - ffmpeg
+        - findface-ntls
+        - findface-data-emotions.v1-cpu
+        - findface-data-liveness.alleyn.v2-cpu
+        - findface-data-medmask3
+        - findface-data-pedet
+        - findface-data-normalization
+        - findface-data-kiwi-320-cpu
+        - findface-data-normalization-crop2x.v2-maxsize400-cpu
+        - findface-data-beard.v0-cpu
+        - findface-data-normalization-ant.v2-cpu
+        - findface-data-detector-cheetah-fast-cpu
+        - findface-data-medmask3.v2-cpu
+        - findface-data-beard
+        - findface-data-jackfruit-480-cpu
+        - findface-data-quality
+        - findface-data-emotions
+        - findface-data-normalization-bee-fast-cpu
+        - findface-data-quality.v1-cpu
+        - findface-data-glasses3
+        - findface-data-pedet-edie-rc2-cpu
+        - findface-data-detector-cheetah-cpu
+        - findface-data-detector-mtcnn-cpu
+        - findface-data-face
+        - findface-data-age.v1-cpu
+        - findface-data-normalization-bee.v2-cpu
+        - findface-data-liveness
+        - findface-data-glasses3.v0-cpu
+        - findface-data-detector
+        - findface-data-gender.v2-cpu
+        - findface-data-age
+        - findface-data-gender
+        - findface-data-glasses3.v0-cpu
+        - findface-data-medmask3.v2-cpu
+        - findface-data-kiwi-320-cpu
+        - findface-data-emotions.v1-cpu
+        - findface-data-liveness.alleyn.v2-cpu
+        - findface-data-age.v1-cpu
+        - findface-data-beard.v0-cpu
+        - findface-data-quality.v1-cpu
+        - findface-data-jackfruit-480-cpu
+      become: yes
+      ignore_errors: yes
+    - name: Copy file - cp unlift.service /etc/systemd/system/
+      file:
+        path: /etc/systemd/system/unlift.service
+        state: absent
+      become: yes
+      ignore_errors: True
+    - name: Copy file - cp unlift.service /etc/systemd/system/
+      file:
+        path: /etc/systemd/system/unlift-updater.service
+        state: absent              
+      become: yes
+      ignore_errors: True
+    - name: Create a directory if it does not exist #(?????!!?)
+      file:
+        path: /opt/unlift/
+        state: absent
+      become: yes
+    - name: Copy file - sudo cp unlift.ini /etc/
+      file:
+        path: /etc/unlift.ini
+        state: absent
+      become: yes
+    - name: Copy file - sudo cp unlift.ini /etc/
+      file:
+        path: /etc/unlift-updater.ini
+        state: absent
+      become: yes
+    - name: Create a directory /etc/unlift_plugins/
+      file:
+        path: /etc/unlift_plugins/
+        state: absent
+      become: yes
+    - name: /etc/findface-extraction-api.ini
+      file:
+        path: /etc/findface-extraction-api.ini
+        state: absent
+      become: yes
+    - name: /etc/findface-video-worker-cpu.ini
+      file:
+        path: /etc/findface-video-worker-cpu.ini
+        state: absent
+      become: yes
+    - name: /etc/findface-video-manager.conf
+      file:
+        path: /etc/findface-video-manager.conf
+        state: absent
+      become: yes
+    - name: /etc/findface-sf-api.ini
+      file:
+        path: /etc/findface-sf-api.ini
+        state: absent
+      become: yes
+    - name: /etc/findface-facerouter.py
+      file:
+        path: /etc/findface-facerouter.py
+        state: absent
+      become: yes
+    - name: Create a directory /opt/unlift/samples
+      file:
+        path: /opt/unlift/samples
+        state: absent
+      become: yes
+    - name: /etc/unlift.ini
+      file:
+        path: /etc/unlift.ini
+        state: absent   
+      become: yes
+    - name: /etc/unlift-updater.ini
+      file:
+        path: /etc/unlift-updater.ini
+        state: absent
+      become: yes
+    - name: Enable unlift.service && sudo systemctl start unlift
+      systemd:
+        name: unlift
+        enabled: no
+        masked: no
+        state: stopped
+      become: yes
+      ignore_errors: True
+    - name: Enable unlift-updater.service && sudo systemctl start unlift-updater
+      systemd:
+        name: unlift-updater
+        enabled: no
+        masked: no
+        state: stopped
+      become: yes
+      ignore_errors: True
+    - name: clean
+      shell: 'rm -rf ff* ss* bit* alert* dot* *sh *py'
+      become: yes
+    - name: Reboot a slow machine that might have lots of updates to apply
+      ansible.builtin.reboot:
+        reboot_timeout: 3600
+      become: yes
+

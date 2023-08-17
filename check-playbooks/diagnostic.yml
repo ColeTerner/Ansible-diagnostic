@@ -1,0 +1,520 @@
+---
+  - name: Gathering info from machines
+    hosts:  all
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+    tags: info
+    tasks:
+      
+    #1)Checking RAM
+    - name: Checking RAM of PC
+      assert:
+        that:
+          - ansible_memtotal_mb | int >=14000
+        fail_msg: "Memory is probably 8 GB or LESS. Only pray can help!"
+      ignore_errors: yes
+      
+    #2)Linux Release
+    - name: Get Linux release
+      shell:  uname -a | awk '{print $2,$3,$4}'
+      register: kernel
+      
+    #Print Linux release
+    - name: Print Linux release
+      debug: |
+        msg="Linux release - {{kernel.stdout}}"
+      
+
+    #3)VIDEOCARD
+    - name: Get VIDEOCARD
+      shell:  lspci | grep VGA
+      register: videocard
+      
+
+    #Print videocard
+    - name: Print VIDEOCARD
+      debug: |
+        msg="VIDEOCARD - {{videocard.stdout}}" 
+      
+
+    #4) SERVER's LOAD
+    - name: Get LOAD of the system
+      shell:  cat /proc/loadavg | awk '{print $1,$2,$3}'
+      register: load
+      
+      #when: load >= 1
+      #notify: 
+        #- reboot
+
+    #Print system's load
+    - name: Print LOAD of the system
+      debug: |
+        msg="SERVER's LOAD( 1m 5m 15m ) - {{load.stdout}}"
+      
+
+    #5) Check UPTIME
+    - name: Check UPTIME of the server
+      shell:  uptime | awk '{print $2,$3,$4,$5}'
+      register: uptime
+      
+
+    #Print UPTIME of the server
+    - name: Print UPTIME
+      debug:  |
+        msg="Uptime is - {{uptime.stdout}}"
+      
+
+    #6)Check correct TOKEN
+    - name: Check TOKEN unlift
+      shell:  cat /etc/unlift.ini | grep unlift_token | awk -F '=' '{print $2}'
+      register: unlift_token
+      become: yes
+      ignore_errors:  yes
+    - debug:  var=unlift_token.stdout
+
+    - name: Check TOKEN unlift-updater
+      shell:  cat /etc/unlift-updater.ini | grep unlifttoken | awk '{print $3}'
+      register: updater_token
+      become: yes
+      ignore_errors:  yes
+    - debug:  var=updater_token.stdout
+
+    # - name: compare tokens
+    #   assert:
+    #     that:
+    #       - "{{unlift_token.stdout}} == {{updater_token.stdout}}"
+    #     fail_msg: "UNLIFT and UNLIFT-UPDATER tokens ARE DIFFERENT!!"
+
+    #Print current TOKEN
+    - name: Print TOKEN
+      debug: |
+        msg="TOKEN is - {{token.stdout}}"
+      ignore_errors: yes
+      
+
+    #7)Check the LICENSE
+    - name: Check LICENSE
+      shell:  cat /etc/findface-extraction-api.ini |grep ntls | awk -F ":" '{print $3}'
+      register: license
+      ignore_errors:  yes
+      
+
+    #Print LICENSE
+    - name: Print LICENSE
+      debug: |
+        msg="LICENSE is - {{license.stdout}}"
+      
+
+    #8)Check the SWAP
+    - name: Check SWAP
+      shell:  free -h | grep total | awk '{print $1,$2,$3}'; free -h | grep Swap | awk '{print $2,$3,$4}'
+      register: swap
+      ignore_errors:  yes
+      
+
+    #Print SWAP
+    - name: Print SWAP
+      debug: |
+        msg="SWAP is - {{swap.stdout_lines}}"
+      
+    #9)Check model of CPU
+
+    #Extract CPU model
+    - name: Check CPU model
+      shell:  lscpu | grep "Model name" | awk '{print $3,$4,$5,$8}'
+      register: cpu
+      
+
+    #Print CPU model
+    - name: Print CPU model
+      debug: |
+        msg="Model of CPU - {{ cpu.stdout }}"
+
+    - name: Check if FINDFACE is installed
+      shell:  dpkg -l | grep findface
+      register: findface
+    - debug:  var=findface.stdout_lines
+
+#(2) FAST DIAGNOSTIC
+
+  - name: Fast diagnostic
+    hosts:  all
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+    tasks:
+    #1)Check SERVICES
+
+    #Restart all Services
+    - name: Check all services are started
+      systemd:
+        name: "{{ item }}"
+        state:  restarted
+        enabled:  yes
+      with_items:
+        - findface-extraction-api
+        - findface-facerouter
+        - findface-sf-api
+        - findface-video-manager
+       # - findface-video-worker-cpu
+       # - findface-video-worker-gpu
+       # - findface-counter
+        - memcached
+        - unlift
+        - unlift-updater
+        - etcd
+      ignore_errors:  yes
+      become: yes
+      tags: service
+
+    - name: service status
+      shell:  systemctl list-units --type service | grep -E 'unlift.*|findface-.*|memcached|etcd' | awk '{print $1,$4}' | column -t -s ' '
+      become: yes
+      register: service_status   #register all of cycle iteration into a single variable
+      ignore_errors:  yes
+      tags: service
+
+    - debug:
+        msg:  "{{ service_status.stdout_lines}}"
+      tags: service
+
+    #2)Check status of all cameras
+
+    - name: Install jq
+      apt:
+        name: jq
+        update_cache: yes
+      ignore_errors:  yes
+      become: yes
+
+    - name: Check STATUS of cameras(curl)
+      shell: curl -s http://127.0.0.1:18810/jobs | jq -r '.[]|((.status)+" "+.stream_url+" posted="+(.statistic.faces_posted|tostring)+" failed="+(.statistic.faces_failed|tostring)+" not_posted="+(.statistic.faces_not_posted|tostring))'
+      register: curl
+      tags: curl
+
+    #Print status of cameras
+    - name: Print STATUS of all cameras(posted,failed)
+      debug: |
+        msg="{{ curl.stdout }}"
+      tags: curl
+
+    - block:
+    #3)Check work of DNS
+
+        - name: Gather DNS response resolving google.com
+          shell:  nslookup google.com | grep answer
+          register: dns_answer
+          tags: dns
+
+        #Print DNS answer
+        - name: Print out DNS answer
+          debug: |
+            msg="{{ dns_answer.stdout }}"
+          tags: dns
+
+      rescue:
+        - name: Add block
+          blockinfile:
+            path: /etc/hosts
+            state: present
+            insertbefore: "^127.0.0.1.*"
+            block: |
+              185.158.114.149 unlift.ru
+              5.252.193.80 face452k.bit-tech.co
+            marker: "# {mark} ANSIBLE MANAGED BLOCK"
+          become: yes
+          tags: dns
+
+
+    #4)Cat /etc/hosts
+    - name: cat /etc/hosts
+      shell: cat /etc/hosts
+      register: hosts
+      become: yes
+      tags: dns
+
+    - debug: var=hosts.stdout_lines
+      tags: dns
+
+    #5)BALANCER CHECK
+    - name: Check balancer availability
+      shell:  nc -w1 -vz face452k.bit-tech.co 8101-8105
+      register: balance
+      ignore_errors:  yes
+      tags: balancer
+    - debug: msg={{balance.stderr_lines}}
+      tags: balancer
+
+    - name: Check unlift availability
+      shell:  nc -w1 -vz unlift.ru 443
+      register: unlift
+      ignore_errors:  yes
+      tags: balancer
+    - debug: msg={{unlift.stderr_lines}}
+      tags: balancer
+      
+    - name: Test Read-Only
+      shell:  touch dek && rm dek
+      register: read_only
+      become: yes
+    - debug:  var=read_only.stdout
+
+#(3) TIME SYNC
+  - name: NTP sync and push the NTP time to motherboard
+    hosts:  all
+    gather_facts: false
+    become: yes
+    tags: ntp
+    tasks:
+
+      - name: MOTHERBOARD time
+        shell:  hwclock | cut -d "." -f 1
+        register: hw_time
+      - debug:  var=hw_time.stdout
+
+      - name: OS(NTP) time
+        shell:  date +"%Y-%m-%d %H:%M:%S"
+        register: os_time
+      - debug:  var=os_time.stdout
+
+      - name: ntpq "-P"
+        shell:  ntpq -p
+        register: ntpq
+      - debug:  var=ntpq.stdout_lines
+
+      - name: NTP stop
+        systemd:
+          name: ntp
+          state:  stopped
+      
+      - name: NTP sync
+        shell:  ntpd -gq
+
+      - name: NTP start
+        systemd:
+          name: ntp
+          state:  restarted
+
+      - name: UNLIFT UNLIFT-UPDATER restart
+        systemd:
+          name: '{{item}}'
+          state:  restarted
+        with_items:
+          - 'unlift'
+          - 'unlift-updater'
+        
+      - name: Push NTP time to motherboard time
+        shell:   hwclock --systohc
+
+      - name: reboot
+        reboot:
+
+      - name: ntpq "-P"
+        shell:  ntpq -p
+        register: ntpq
+      - debug:  var=ntpq.stdout_lines
+
+      - name: MOTHERBOARD time
+        shell:  hwclock | cut -d "." -f 1
+        register: hw_new_time
+      - debug:  var=hw_new_time.stdout
+
+      - name: OS(NTP) time
+        shell:  date +"%Y-%m-%d %H:%M:%S"
+        register: os_new_time
+      - debug:  var=os_new_time.stdout
+#(4) LOG OBSERVATION
+
+  - name: Observe logs
+    hosts:  all
+    tags: logs
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+    tasks:
+
+    - name: Observe ERROR in last 100 logs
+      shell:  cat /var/log/syslog | tail -n 300 | grep ERROR
+      register: logs
+      become: yes
+
+    - name: Print logs
+      debug:  |
+        msg="{{logs.stdout_lines}}"
+    
+    - name: Get white IP for balancer
+      shell:  curl -s http://5.252.193.80/forwarded/|cut -d "," -f1
+      register: white_ip
+    - debug:  var=white_ip.stdout
+
+    - name: dmesg errors
+      shell: dmesg --level=alert,err,crit,emerg | wc -l
+      register: dmesg
+      become: yes
+    - debug: var=dmesg.stdout
+
+    
+  
+
+    - block:
+    #3)Check work of DNS
+
+        - name: status of ip_cam
+          shell:  curl -s http://127.0.0.1:18810/jobs | jq -r '.[]|(.status)'
+          register: cam_status
+          failed_when:  cam_status.stdout != "INPROGRESS"
+        - debug:  var=cam_status.stdout
+
+      rescue:
+        - name: NTP sync
+          shell:  sudo service ntp stop;sudo ntpd -gq;sudo service ntp start;sudo systemctl restart unlift unlift-updater
+          become: yes
+
+    - name: Get white IP for balancer
+      shell:  curl -s http://5.252.193.80/forwarded/|cut -d "," -f1
+      register: white_ip
+    - debug:  var=white_ip.stdout
+
+    - name: reset facts
+      set_fact:
+        ansible_host: 5.252.193.80
+        ansible_user: fface
+        ansible_password: 'fface-pwd1902'
+        ansible_become_pass:  'fface-pwd1902'
+        ansible_sudo_pass:  'fface-pwd1902'
+
+    - name: Set white_ip into firewall exclusion
+      shell:  sudo ufw allow from {{ white_ip.stdout }} to any port 3133:3184,8101:8108 proto tcp
+      register: rule
+      become: yes
+    - debug:  var=rule.stdout
+
+#(5) Check CONFIG files of findface-* services (/etc/findface-*.ini)
+
+  - name: Check configs of services - findface-video-worker-cpu,findface-video-worker-gpu, findface-sf-api, findface-extraction-api
+    hosts: all
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+    become: yes
+    tags: config
+    tasks:
+    
+      - name: findface-video-worker-gpu
+        shell:  cat /etc/findface-video-worker-gpu.ini | grep -v '#.*' | grep -E 'batch_size|skip_count'
+        register: ff_gpu
+        ignore_errors:  yes
+      - debug:  var=ff_gpu.stdout_lines
+
+      - name: findface-video-worker-cpu
+        shell:  cat /etc/findface-video-worker-cpu.ini | grep -v '#.*' | grep -E 'batch_size|skip_count'
+        register: ff_cpu
+        ignore_errors:  yes
+      - debug:  var=ff_cpu.stdout_lines
+
+      - name: findface-sf-api
+        shell:  cat /etc/findface-sf-api.ini | grep -v '#.*' | grep 'connect:'
+        register: ff_sf_api
+      - debug:  var=ff_sf_api.stdout_lines
+
+      - name: findface-extraction-api
+        shell:  cat /etc/findface-extraction-api.ini | grep -v '#.*' | grep -E 'detectors|normalizers|extractors|instances:|max_batch_size:'
+        register: ff_extract
+      - debug:  var=ff_extract.stdout_lines
+
+
+  - name: REBOOT host
+    hosts: all
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+    become: yes
+    tags: reboot
+    tasks:
+
+      - name: reboot Host
+        reboot:
+
+
+  - name: Enable check_diag (unlift_diag.py)
+    hosts: all
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+    become: yes
+    tags: check
+    tasks:
+
+      - name: Create task on cron
+        cron:
+          name: check
+          special_time: hourly
+          user: root
+          job: 'python3 /opt/unlift/unlift_proxy/unlift_diag.py -c /etc/unlift.ini|logger'
+          state: present
+        become: yes
+
+      - name: cat /etc/unlift-updater.ini
+        shell:  cat /etc/unlift-updater.ini | grep currentversion
+        register: proxy_version
+        become: yes
+      - debug:  var=proxy_version.stdout
+
+#    - name: Set currentversion=1
+#      replace:
+#        path: /etc/unlift-updater.ini
+#        regexp: 'currentversion = .*'
+#        replace:  'currentversion = 1'
+#      when: proxy_version.stdout != 1
+#      become: yes
+
+#    - name: cat /etc/unlift-updater.ini
+#      shell:  cat /etc/unlift-updater.ini | grep currentversion
+#      register: proxy_version_1
+#      become: yes
+#    - debug:  var=proxy_version_1.stdout
+
+      - name: MANUALLY DO CHECK 
+        shell:  python3 /opt/unlift/unlift_proxy/unlift_diag.py -c /etc/unlift.ini
+        register: checky
+        become: yes
+      - debug:  var=checky.stdout_lines
+    
+
+      - name: restart unlift unlift-updater
+        systemd:
+          name: "{{ item }}"
+          state:  restarted
+        with_items:
+          - unlift
+          - unlift-updater
+        become: yes
+
+  - name: Enable check_diag (unlift_diag.py)
+    hosts: all
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+    become: yes
+    tags: pre
+    tasks:
+
+      - name: image
+        shell:  ls -lah /install
+        register: image
+        ignore_errors:  yes
+      - debug:  var=image.stdout_lines
+
+      - name: lsb_release
+        shell:  lsb_release -r
+        register: release
+      - debug:  var=release.stdout
+
+      - name: kernel
+        shell:  uname -r
+        register: kernel
+      - debug:  var=kernel.stdout
+
+      - name: df -h
+        shell:  df -h
+        register: df
+      - debug:  var=df.stdout_lines
+
+      - name: check videocard
+        shell:  lspci | grep -E '3D|VGA'
+        register: gpu
+      - debug:  var=gpu.stdout

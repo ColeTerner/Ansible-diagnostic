@@ -1,0 +1,89 @@
+---
+- name: dns
+  hosts: all
+
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+
+    - name: Create task on cron
+      cron:
+        name: check
+        special_time: hourly
+        user: root
+        job: 'python3 /opt/unlift/unlift_proxy/unlift_diag.py -c /etc/unlift.ini|logger'
+        state: present
+      become: yes
+
+    - nmcli:
+        conn_name: Wired connection 1
+        type: ethernet
+        dns4:
+          - 77.88.8.88
+          - 1.1.1.1
+        state: present
+      become: yes
+
+    - nmcli:
+        conn_name: Wired connection 2
+        type: ethernet
+        dns4:
+          - 77.88.8.88 
+          - 1.1.1.1
+        state: present
+      become: yes
+      ignore_errors: True
+
+#    - name: Reboot a slow machine that might have lots of updates to apply
+#      ansible.builtin.reboot:
+#        reboot_timeout: 3600
+#      become: yes
+
+    - name: Get Kernel version
+      shell: uname -r
+      register: kernel_shell_output
+
+    - debug: msg="{{ kernel_shell_output.stdout}}"
+
+#    - name: Hold kernel
+#      dpkg_selections:
+#        name: "{{ kernel_shell_output.stdout}}"
+#        selection: hold
+#      become: yes
+
+    - name: Hold Kernel version
+      shell: sudo apt-mark hold {{ kernel_shell_output.stdout}}
+      become: yes
+
+    - name: Get Hold status
+      shell: dpkg -l|grep linux|grep "^hi"
+      register: hold
+
+    - debug: msg="{{ hold.stdout}}"
+      
+    - name: dnssec
+      lineinfile:
+        path: /etc/systemd/resolved.conf
+        line: 'DNSSEC=no'
+        insertafter: EOF
+        backup: yes
+      become: yes
+
+    - name: restart resolver
+      service:
+        name: systemd-resolved.service
+        state: restarted
+      become: yes
+
+    - name: Reboot a slow machine that might have lots of updates to apply
+      ansible.builtin.reboot:
+        reboot_timeout: 3600
+      become: yes
+
+    - name: Replace skip_count
+      ansible.builtin.replace:
+        path: /etc/findface-video-worker-cpu.ini
+        regexp: 'skip_count = .*'
+        replace: 'skip_count = {{ skip }}'
+      become: yes
+      when: skip is defined

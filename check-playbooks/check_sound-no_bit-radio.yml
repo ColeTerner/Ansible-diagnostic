@@ -1,0 +1,63 @@
+---
+- name: Check sound on system where bit-* services are NOT INSTALLED
+  hosts:  all
+
+  tasks:
+
+  #1)Output history of all sound alerting for TODAY
+
+  - name: Catch all SOUND alerts from TODAY logs
+    shell: cat /var/log/syslog | grep SOUND
+    register: sound
+
+  - name: Print SOUND alerts for TODAY
+    debug:
+      var:  sound.stdout_lines
+
+  - name: Catch all SOUND alerts from TODAY logs
+    shell: cat /var/log/syslog | grep warning_
+    register: warning
+
+  - name: Print WARNING_ alerts from TODAY
+    debug:
+      var:  warning.stdout_lines 
+
+  #2)Check sound signal manually - warning.mp3
+
+  - name: Run /opt/unlift/unlift_proxy/warning.mp3 manually
+    shell:  ffprobe /opt/unlift/unlift_proxy/warning.mp3
+    register: play
+    become: yes
+
+  - name: Print result of playing
+    debug:
+      var:  play.stdout_lines
+
+
+  #3)Check crontab
+
+  - name: Get crontab for ROOT
+    shell: sudo crontab -l
+    register: root_cron
+    become: yes
+    ignore_errors:  yes
+
+  - name: Print ROOT crontab
+    debug:
+      var:  root_cron.stdout_lines
+
+  - name: Get crontab for CURRENT USER
+    shell: crontab -l
+    register: user_cron
+    ignore_errors:  yes
+
+  - name: Print USER crontab
+    debug:
+      var:  user_cron.stdout_lines
+
+
+  #4)History of succesful SOUND PLAYING 
+  - name: Gather statistic of succesful playing alert(SOUND PLAYING) across all logs(week)
+    shell:  zgrep -a "SOUND PLAYING" /var/log/syslog* | tail -n 100
+    register: zgrep_play
+  - debug:  var=zgrep_play.stdout_lines

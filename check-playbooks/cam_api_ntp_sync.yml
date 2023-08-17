@@ -1,0 +1,70 @@
+---
+- name: 12
+  hosts: all
+  #become: yes
+
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    #TimeZone: 11
+    #NTP_TimeZoneDesc: "???????"
+    NTP_Port: 123
+    NTP_UpdatePeriod: 5
+
+  tasks:
+    - name: Repeat transferred IP
+      debug: var={{ansible_host}}
+
+    - name: Exctract last octet, grow him up and save
+      set_fact: |
+        cam1_octet={{ansible_host.split('.')[3] | int + 1 }}
+        cam2_octet={{ansible_host.split('.')[3] | int + 2 }}
+        cam3_octet={{ansible_host.split('.')[3] | int + 3 }}
+        cam4_octet={{ansible_host.split('.')[3] | int + 4 }}
+        cam5_octet={{ansible_host.split('.')[3] | int + 5 }}
+
+    - debug:
+        var:  "{{ item }}"
+      with_items:
+        - cam1_octet
+        - cam2_octet
+        - cam3_octet
+        - cam4_octet
+        - cam5_octet
+
+    - name: Set ip_cam
+      set_fact: |
+        cam1_ip="{{ ansible_host | regex_replace('(^.*\.).*$', '\\1') }}{{cam1_octet}}"
+        cam2_ip="{{ ansible_host | regex_replace('(^.*\.).*$', '\\1') }}{{cam2_octet}}"
+        cam3_ip="{{ ansible_host | regex_replace('(^.*\.).*$', '\\1') }}{{cam3_octet}}"
+        cam4_ip="{{ ansible_host | regex_replace('(^.*\.).*$', '\\1') }}{{cam4_octet}}"
+        cam5_ip="{{ ansible_host | regex_replace('(^.*\.).*$', '\\1') }}{{cam5_octet}}"
+
+
+    - debug:
+        var:  "{{ item }}"
+      with_items:
+        - cam1_ip
+        - cam2_ip
+        - cam3_ip
+        - cam4_ip
+        - cam5_ip
+
+    - name: Set NTP.Enable, NTP.address, NTP.port, NTP.UpdatePeriod
+      shell:  |
+        curl -g --anyauth --user 'admin:Admin12345' 'http://{{ item }}/cgi-bin/configManager.cgi?action=setConfig&NTP.Enable=true'
+        curl -g --anyauth --user 'admin:Admin12345' 'http://{{ item }}/cgi-bin/configManager.cgi?action=setConfig&NTP.Address={{ ansible_host }}'
+        curl -g --anyauth --user 'admin:Admin12345' 'http://{{ item }}/cgi-bin/configManager.cgi?action=setConfig&NTP.Port={{ NTP_Port }}'
+        curl -g --anyauth --user 'admin:Admin12345' 'http://{{ item }}/cgi-bin/configManager.cgi?action=setConfig&NTP.UpdatePeriod={{ NTP_UpdatePeriod }}'
+      with_items:
+        - "{{ cam1_ip }}"
+        - "{{ cam2_ip }}"
+        - "{{ cam3_ip }}"
+        - "{{ cam4_ip }}"
+        - "{{ cam5_ip }}"
+
+
+
+        # - name: ???????? TimeZoneDesc
+      # shell: curl -g --anyauth --user 'admin:Admin12345' 'http://{{ new_ip }}/cgi-bin/configManager.cgi?action=setConfig&NTP.TimeZone={{ TimeZone }}&NTP.TimeZoneDesc={{ NTP_TimeZoneDesc }}'
+      # become: yes
+      # ignore_errors: True

@@ -1,0 +1,37 @@
+---
+- name: Check bitrate of camera(RTSP)
+  hosts:  all
+
+  tasks:
+  
+  #1)Check wether FFMPEG is installed
+  - name: Install ffmpeg
+    apt:
+      name: ffmpeg
+      state:  latest
+      update-cache: yes
+    become: yes
+
+  #2)Read RTSP input from user
+  - name: Await user input RTSP of camera
+    pause:
+      prompt: "RTSP input required from user:"
+    register: rtsp
+  - debug:  var=rtsp.user_input
+
+  #3)Check bitrate through FFMPEG(from inventory pc to camera)
+  - name: Record piece of video to /home/../okey1.mp4
+    shell:  ffmpeg -t 10 -rtsp_transport tcp -i {{rtsp.user_input}} -vcodec copy -an okey1.mp4 -y
+    become: yes
+  
+  #4)Copy backward(fetch) recorded video to /mnt/distr (share local)
+
+  - name: Pull this video to the localhost /mnt/distr/
+    fetch:
+      src:  /home/{{ansible_user}}/okey1.mp4
+      dest: /mnt/distr/
+      flat: yes
+    become: yes
+
+
+

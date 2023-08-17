@@ -1,0 +1,60 @@
+---
+- name: Set two timesrv on BNS
+  hosts:  all
+  gather_facts: false
+  vars:
+    timesrv1: 192.168.103.1
+    timesrv2: 192.168.3.11
+
+  remote_user:  detect
+  become: True
+  tasks:
+
+    - name: Install basic packages(ntp)
+      apt:
+        name: "{{ item }}"
+        state:  present
+      loop:
+        - ntp
+      
+
+    - name: clean ntp.conf
+      shell:  '>/etc/ntp.conf'
+      
+
+    - name: append 2 string to ntp config
+      lineinfile:
+        path: /etc/ntp.conf
+        line: "{{item}}"
+      with_items:
+        - "server {{timesrv1}}"
+        - "server {{timesrv2}}"
+      
+
+    - name: Service timesyncd stop
+      service:
+        name: systemd-timesyncd
+        state:  stopped
+        enabled:  no
+      
+
+    - name: Service ntp stop
+      systemd:
+        name: ntp
+        state:  stopped
+      
+
+    - name: Sync time with ntpd -gq
+      shell:  ntpd -gq &
+      
+    - name: Service ntp restart
+      systemd:
+        name: "{{item}}"
+        state:  restarted
+      loop:
+        - ntp
+        - unlift
+        - unlift-updater
+
+ 
+

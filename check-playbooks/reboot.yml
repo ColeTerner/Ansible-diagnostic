@@ -1,0 +1,10 @@
+---
+- name: Try things
+  hosts:  all
+  
+
+  tasks:
+    
+    - name: reboot
+      reboot:
+      become: yes

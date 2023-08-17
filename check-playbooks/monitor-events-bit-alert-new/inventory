@@ -1,0 +1,25 @@
+[all]
+10.18.222.81
+#1 ansible_host=10.0.1.247
+#77 ansible_host=10.17.54.145
+#10.0.1.247
+#10.20.250.145
+#10.0.107.247
+
+#10.19.130.145
+#10.20.242.145
+#10.16.250.145
+#10.19.102.145
+#10.20.222.145
+
+#39 ansible_host=10.43.211.85 token=9285d7d4dc
+
+[all:vars]
+ansible_user=detect
+become-user=root
+ansible_password=detect-pwd
+ansible_become_pass=detect-pwd
+ansible_sudo_pass=detect-pwd
+license_ntls_server=face452k.bit-tech.co:3144
+ansible_python_interpreter=/usr/bin/python3
+timesrv=0.pool.ntp.org

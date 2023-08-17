@@ -1,0 +1,20 @@
+---
+- name: test - ping ans ssh
+  hosts:  all
+  become: yes
+  tasks:
+
+
+  - name: check PING
+    shell:  ping -c 4 10.254.129.83
+    register: ping
+    ignore_errors:  yes
+  - debug:  var=ping.stdout_lines
+
+  - name: check SSH
+    shell:  hostname
+    register: hostname
+    ignore_errors:  yes
+  - debug:  var=hostname.stdout
+
+  

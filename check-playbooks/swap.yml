@@ -1,0 +1,54 @@
+---
+- name: sysctl module 
+  hosts: all
+  become: true
+  vars:
+    sysctl_name: "vm.swappiness"
+    sysctl_value: "1"
+  tasks:
+    - name: set sysctl
+      ansible.posix.sysctl:
+        name: "{{ sysctl_name }}"
+        value: "{{ sysctl_value }}"
+        state: present
+        sysctl_set: true
+        reload: true
+
+    - name: Set cron reboot every 15 days
+      cron:
+        minute: 0
+        hour: 7
+        day:  "*"
+        month:  "*"
+        weekday:  "*"
+        job:  sudo reboot
+        state:  present
+
+    - name: reboot
+      reboot:
+
+    - name: check Swap
+      shell:  free -h
+      register: swap
+    - debug:  var=swap.stdout_lines
+
+    # - name: calculate USED swap
+    #   shell:  free | grep Swap | awk '{print $3}'
+    #   register: used_swap
+    # - debug:  var=used_swap.stdout
+
+    # - name: calculate MAX swap
+    #   shell:  free | grep Swap | awk '{print $2}'
+    #   register: max_swap
+    # - debug:  var=max_swap.stdout
+
+    # - name: Set limit
+    #   set_fact:
+    #     limit:  {{max_swap.stdout * 0.8 | int}}
+    # - debug:  var=limit.stdout
+
+#    - name: Compare USED and MAX
+#      assert:
+#        that: {{ used_swap.stdout | int }} <= {{ max_swap.stdout * 0.8 | int }}
+#        fail_msg: "SWAP is overrun!!!"
+#        succes

@@ -1,0 +1,187 @@
+---
+- name: Check who manufactured ip_cam for rtsp
+  hosts:  all
+
+  tasks:
+    - name: repeat ansible_host
+      debug:
+        var:  ansible_host
+
+    - name: first octet
+      shell:  echo "{{ ansible_host }}" | cut -d "." -f 1
+      register: oct1
+    - debug:  var=oct1.stdout
+
+    - name: second octet
+      shell:  echo "{{ ansible_host }}" | cut -d "." -f 2
+      register: oct2
+    - debug:  var=oct2.stdout
+    
+    - name: third octet
+      shell:  echo "{{ ansible_host }}" | cut -d "." -f 3
+      register: oct3
+    - debug:  var=oct3.stdout
+
+    - name: forth octet
+      shell:  echo "{{ ansible_host }}" | cut -d "." -f 4
+      register: oct4
+    - debug:  var=oct4.stdout
+
+    - name: TRASSIR
+      shell:  'ffmpeg -y -i "rtsp://admin:Admin12345@{{ oct1.stdout }}.{{ oct2.stdout }}.{{ oct3.stdout }}.{{ item }}/live/main" -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+      with_items:
+        - "{{ oct4.stdout | int + 1 }}"
+        - "{{ oct4.stdout | int + 2 }}"
+        - "{{ oct4.stdout | int + 3 }}"
+        - "{{ oct4.stdout | int + 4 }}"
+        - "{{ oct4.stdout | int + 5 }}"
+      ignore_errors:  yes
+      become: yes
+    - debug:  msg="rtsp://admin:Admin12345@10.239.29.214/live/main"
+
+    - name: DAHUA
+      shell:  'ffmpeg -y -i "rtsp://admin:Admin12345@{{ oct1.stdout }}.{{ oct2.stdout }}.{{ oct3.stdout }}.{{ item }}/cam/realmonitor?channel=1&subtype=0" -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+      with_items:
+        - "{{ oct4.stdout | int + 1 }}"
+        - "{{ oct4.stdout | int + 2 }}"
+        - "{{ oct4.stdout | int + 3 }}"
+        - "{{ oct4.stdout | int + 4 }}"
+        - "{{ oct4.stdout | int + 5 }}"
+      ignore_errors:  yes
+      become: yes
+    - debug:  msg="rtsp://admin:Admin12345@10.239.29.214/cam/realmonitor?channel=1&subtype=0"
+
+    - name: empty preffix
+      shell:  'ffmpeg -y -i "rtsp://admin:Admin12345@{{ oct1.stdout }}.{{ oct2.stdout }}.{{ oct3.stdout }}.{{ item }}" -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+      with_items:
+        - "{{ oct4.stdout | int + 1 }}"
+        - "{{ oct4.stdout | int + 2 }}"
+        - "{{ oct4.stdout | int + 3 }}"
+        - "{{ oct4.stdout | int + 4 }}"
+        - "{{ oct4.stdout | int + 5 }}"
+      ignore_errors:  yes
+      become: yes
+    - debug:  msg="rtsp://admin:Admin12345@10.239.29.214"
+
+    - name: /h264
+      shell:  'ffmpeg -y -i "rtsp://admin:Admin12345@{{ oct1.stdout }}.{{ oct2.stdout }}.{{ oct3.stdout }}.{{ item }}/h264" -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+      with_items:
+        - "{{ oct4.stdout | int + 1 }}"
+        - "{{ oct4.stdout | int + 2 }}"
+        - "{{ oct4.stdout | int + 3 }}"
+        - "{{ oct4.stdout | int + 4 }}"
+        - "{{ oct4.stdout | int + 5 }}"
+      ignore_errors:  yes
+      become: yes
+    - debug:  msg="rtsp://admin:Admin12345@10.239.29.214/h264"
+    
+    - name: /H264?ch=1&subtype=0
+      shell:  'ffmpeg -y -i "rtsp://admin:Admin12345@{{ oct1.stdout }}.{{ oct2.stdout }}.{{ oct3.stdout }}.{{ item }}/H264?ch=1&subtype=0" -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+      with_items:
+        - "{{ oct4.stdout | int + 1 }}"
+        - "{{ oct4.stdout | int + 2 }}"
+        - "{{ oct4.stdout | int + 3 }}"
+        - "{{ oct4.stdout | int + 4 }}"
+        - "{{ oct4.stdout | int + 5 }}"
+      ignore_errors:  yes
+      become: yes
+    - debug:  msg="rtsp://admin:Admin12345@10.239.29.214/H264?ch=1&subtype=0"
+
+    - name: /ISAPI/Streaming/Channels/101
+      shell:  'ffmpeg -y -i "rtsp://admin:Admin12345@{{ oct1.stdout }}.{{ oct2.stdout }}.{{ oct3.stdout }}.{{ item }}/ISAPI/Streaming/Channels/101" -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+      with_items:
+        - "{{ oct4.stdout | int + 1 }}"
+        - "{{ oct4.stdout | int + 2 }}"
+        - "{{ oct4.stdout | int + 3 }}"
+        - "{{ oct4.stdout | int + 4 }}"
+        - "{{ oct4.stdout | int + 5 }}"
+      ignore_errors:  yes
+      become: yes
+    - debug:  msg="rtsp://admin:Admin12345@10.239.29.214/ISAPI/Streaming/Channels/101"
+
+    - name: /ch01/0
+      shell:  'ffmpeg -y -i "rtsp://admin:Admin12345@{{ oct1.stdout }}.{{ oct2.stdout }}.{{ oct3.stdout }}.{{ item }}/ch01/0" -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+      with_items:
+        - "{{ oct4.stdout | int + 1 }}"
+        - "{{ oct4.stdout | int + 2 }}"
+        - "{{ oct4.stdout | int + 3 }}"
+        - "{{ oct4.stdout | int + 4 }}"
+        - "{{ oct4.stdout | int + 5 }}"
+      ignore_errors:  yes
+      become: yes
+    - debug:  msg="rtsp://admin:Admin12345@10.239.29.214/ch01/0"
+
+    - name: /stream1
+      shell:  'ffmpeg -y -i "rtsp://admin:Admin12345@{{ oct1.stdout }}.{{ oct2.stdout }}.{{ oct3.stdout }}.{{ item }}/stream1" -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+      with_items:
+        - "{{ oct4.stdout | int + 1 }}"
+        - "{{ oct4.stdout | int + 2 }}"
+        - "{{ oct4.stdout | int + 3 }}"
+        - "{{ oct4.stdout | int + 4 }}"
+        - "{{ oct4.stdout | int + 5 }}"
+      ignore_errors:  yes
+      become: yes
+    - debug:  msg="rtsp://admin:Admin12345@10.239.29.214/stream1"
+
+    - name: /Streaming/Channels/1
+      shell:  'ffmpeg -y -i "rtsp://admin:Admin12345@{{ oct1.stdout }}.{{ oct2.stdout }}.{{ oct3.stdout }}.{{ item }}/Streaming/Channels/1" -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+      with_items:
+        - "{{ oct4.stdout | int + 1 }}"
+        - "{{ oct4.stdout | int + 2 }}"
+        - "{{ oct4.stdout | int + 3 }}"
+        - "{{ oct4.stdout | int + 4 }}"
+        - "{{ oct4.stdout | int + 5 }}"
+      ignore_errors:  yes
+      become: yes
+    - debug:  msg="rtsp://admin:Admin12345@10.239.29.214/Streaming/Channels/1"
+
+    - name: /h264Preview_01_main
+      shell:  'ffmpeg -y -i "rtsp://admin:Admin12345@{{ oct1.stdout }}.{{ oct2.stdout }}.{{ oct3.stdout }}.{{ item }}/h264Preview_01_main" -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+      with_items:
+        - "{{ oct4.stdout | int + 1 }}"
+        - "{{ oct4.stdout | int + 2 }}"
+        - "{{ oct4.stdout | int + 3 }}"
+        - "{{ oct4.stdout | int + 4 }}"
+        - "{{ oct4.stdout | int + 5 }}"
+      ignore_errors:  yes
+      become: yes
+    - debug:  msg="rtsp://admin:Admin12345@10.239.29.214/h264Preview_01_main"
+
+    - name: /h264Preview_01_main
+      shell:  'ffmpeg -y -i "rtsp://admin:Admin12345@{{ oct1.stdout }}.{{ oct2.stdout }}.{{ oct3.stdout }}.{{ item }}/h264Preview_01_main" -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+      with_items:
+        - "{{ oct4.stdout | int + 1 }}"
+        - "{{ oct4.stdout | int + 2 }}"
+        - "{{ oct4.stdout | int + 3 }}"
+        - "{{ oct4.stdout | int + 4 }}"
+        - "{{ oct4.stdout | int + 5 }}"
+      ignore_errors:  yes
+      become: yes
+    - debug:  msg="rtsp://admin:Admin12345@10.239.29.214/h264Preview_01_main"
+
+    - name: /av0_0
+      shell:  'ffmpeg -y -i "rtsp://admin:Admin12345@{{ oct1.stdout }}.{{ oct2.stdout }}.{{ oct3.stdout }}.{{ item }}/av0_0" -vframes 1 -q:v 2 sample_fram1.jpg'
+      async:  0.1
+      with_items:
+        - "{{ oct4.stdout | int + 1 }}"
+        - "{{ oct4.stdout | int + 2 }}"
+        - "{{ oct4.stdout | int + 3 }}"
+        - "{{ oct4.stdout | int + 4 }}"
+        - "{{ oct4.stdout | int + 5 }}"
+      ignore_errors:  yes
+      become: yes
+    - debug:  msg="rtsp://admin:Admin12345@10.239.29.214/av0_0"
+
+
+    

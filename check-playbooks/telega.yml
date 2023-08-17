@@ -1,0 +1,17 @@
+---
+
+- name: Install telegram
+  hosts: all
+  become: no
+  tasks:
+  - name: Extract telega.tgz archive in home directory
+    unarchive:
+      src: telega.tgz
+      dest: "{{ ansible_env.HOME }}"
+
+  - name: Copy telega.desktop to autostart
+    become: true
+    copy:
+      src: "{{ ansible_env.HOME }}/Telegram/telegram.desktop"
+      dest: "/etc/xdg/autostart/"
+      remote_src: yes

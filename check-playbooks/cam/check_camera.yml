@@ -1,0 +1,133 @@
+---
+- name: check kamera!
+  hosts: all
+  #become: yes
+
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    camera_login: "admin"
+    camera_password: "admin123"
+    #base_ip: "192.168.1.99"
+
+  tasks:
+    - name: Извлеките последний октет, увеличьте его и сохраните.
+      set_fact: 
+        octet1={{ansible_host.split('.')[3] | int + 1 }}
+        octet2={{ansible_host.split('.')[3] | int + 2 }}
+        octet3={{ansible_host.split('.')[3] | int + 3 }}
+        octet4={{ansible_host.split('.')[3] | int + 4 }}
+        octet5={{ansible_host.split('.')[3] | int + 5 }}
+
+    # - debug: 
+    #     msg:
+    #     - "kamera1: {{ octet1 }}"
+    #     - "kamera2: {{ octet2 }}"
+    #     - "kamera3: {{ octet3 }}"
+    #     - "kamera4: {{ octet4 }}"
+    #     - "kamera5: {{ octet5 }}"
+
+    - name: Добавить увеличенный октет к первым 3 октетам
+      set_fact: 
+        new_ip1="{{ ansible_host | regex_replace('(^.*\.).*$', '\\1') }}{{ octet1 }}"
+        new_ip2="{{ ansible_host | regex_replace('(^.*\.).*$', '\\1') }}{{ octet2 }}"
+        new_ip3="{{ ansible_host | regex_replace('(^.*\.).*$', '\\1') }}{{ octet3 }}"
+        new_ip4="{{ ansible_host | regex_replace('(^.*\.).*$', '\\1') }}{{ octet4 }}"
+        new_ip5="{{ ansible_host | regex_replace('(^.*\.).*$', '\\1') }}{{ octet5 }}"
+
+    # - debug: 
+    #     msg:
+    #     - "kamera1 ip: {{ new_ip1 }}"
+    #     - "kamera2 ip: {{ new_ip2 }}"
+    #     - "kamera3 ip: {{ new_ip3 }}"
+    #     - "kamera4 ip: {{ new_ip4 }}"
+    #     - "kamera5 ip: {{ new_ip5 }}"
+
+#проверка 1 камеры магазина, если наша, продолжаем выполнение
+    - shell: curl -g --anyauth --user 'admin:Admin12345' 'http://{{ new_ip1 }}/cgi-bin/magicBox.cgi?action=getDeviceType'
+      register: type_camera1
+      ignore_errors: True
+
+    # - name: check type=IPC-HDBW2231R-ZS-S2
+    #   fail:
+    #     msg: kamera ne dahua!!!
+    #   when: type_camera1 == "type=IPC-HDBW2231R-ZS-S2"
+
+    - shell: curl -g --anyauth --user 'admin:Admin12345' 'http://{{ new_ip2 }}/cgi-bin/magicBox.cgi?action=getDeviceType'
+      register: type_camera2
+      ignore_errors: True
+
+    - shell: curl -g --anyauth --user 'admin:Admin12345' 'http://{{ new_ip3 }}/cgi-bin/magicBox.cgi?action=getDeviceType'
+      register: type_camera3
+      ignore_errors: True
+
+    - shell: curl -g --anyauth --user 'admin:Admin12345' 'http://{{ new_ip4 }}/cgi-bin/magicBox.cgi?action=getDeviceType'
+      register: type_camera4
+      ignore_errors: True
+
+    - shell: curl -g --anyauth --user 'admin:Admin12345' 'http://{{ new_ip5 }}/cgi-bin/magicBox.cgi?action=getDeviceType'
+      register: type_camera5
+      ignore_errors: True
+
+    - name: Set variable1
+      set_fact:
+        kamera1: "{{ type_camera1.stdout.split }}"
+      ignore_errors: True
+
+    - name: наименование камеры 1
+      debug:
+        var: type_camera1.stdout
+      ignore_errors: True
+
+    - name: Set variable2
+      set_fact:
+        kamera2: "{{ type_camera2.stdout.split }}"
+      ignore_errors: True
+
+    - name: наименование камеры 2
+      debug:
+        var: type_camera2.stdout
+      ignore_errors: True
+#3
+    - name: Set variable3
+      set_fact:
+        kamera3: "{{ type_camera3.stdout.split }}"
+      ignore_errors: True
+
+    - name: наименование камеры 3
+      debug:
+        var: type_camera3.stdout
+      ignore_errors: True
+
+    - name: Set variable4
+      set_fact:
+        kamera4: "{{ type_camera4.stdout.split }}"
+      ignore_errors: True
+
+    - name: наименование камеры 4
+      debug:
+        var: type_camera4.stdout
+      ignore_errors: True
+    
+    - name: Set variable5
+      set_fact:
+        kamera5: "{{ type_camera5.stdout.split }}"
+      ignore_errors: True
+
+    - name: наименование камеры 5
+      debug:
+        var: type_camera5.stdout
+      ignore_errors: True
+
+    # - name: Set NTP.Enable, NTP.address, NTP.port, NTP.UpdatePeriod
+    #   shell:  |
+    #     curl -g --anyauth --user 'admin:Admin12345' 'http://{{ item }}/cgi-bin/configManager.cgi?action=setConfig&NTP.Enable=true'
+    #     curl -g --anyauth --user 'admin:Admin12345' 'http://{{ item }}/cgi-bin/configManager.cgi?action=setConfig&NTP.Address={{ ansible_host }}'
+    #     curl -g --anyauth --user 'admin:Admin12345' 'http://{{ item }}/cgi-bin/configManager.cgi?action=setConfig&NTP.Port={{ NTP_Port }}'
+    #     curl -g --anyauth --user 'admin:Admin12345' 'http://{{ item }}/cgi-bin/configManager.cgi?action=setConfig&NTP.UpdatePeriod={{ NTP_UpdatePeriod }}'
+    #   with_items:
+    #     - "{{ new_ip1 }}"
+    #     - "{{ new_ip2 }}"
+    #     - "{{ new_ip3 }}"
+    #     - "{{ new_ip4 }}"
+    #     - "{{ new_ip5 }}"
+    #   ignore_errors: True

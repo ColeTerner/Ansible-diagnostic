@@ -1,0 +1,77 @@
+---
+- name: Transfer remote host from local DYNAMIC IP to STATIC IP(OpenVPN)
+  hosts:  all
+  vars:
+    ansible_user: detect
+    ansible_python_interpreter: /usr/bin/python3
+
+  tasks:
+
+  - name: Input last octet of desired static IP
+    pause:
+      prompt: "Input last octet of desired static IP - 10.8.0.*"
+    register: ip
+
+  - name: Input token of shop (from ITSM/unlift)
+    pause:
+      prompt: "Input TOKEN of shop"
+    register: token
+
+  - name: Fill the list- file by inputed data
+    shell:  echo "{{ token }} {{ ip }}" >> /home/detect/cesar/list
+
+  - name: Run generate.sh
+    shell:  |
+      cd /home/detect/cesar;
+      cat list|while read i;
+      do;
+      echo $i;
+      name=`echo $i|cut -d " " -f1`;
+      addr=`echo $i|cut -d " " -f2`;
+      echo "$name $addr";
+      cd /home/detect/openvpn-ca;
+      source vars;
+      ./build-key --batch $name;
+      cd /home/detect/client-configs;
+      ./make_config.sh $name;
+      echo "ifconfig-push 10.8.0.$addr 10.8.0.1">/home/detect/cesar/ccd/$name;
+      done
+
+  - name: Launch copy-ccd (Copy OpenVPN keys from ~detect/cesar/ccd/ -> /etc/openvpn/ccd/  - sup2)
+    copy:
+      src:  /home/detect/cesar/ccd/
+      dest: /etc/openvpn/ccd/
+      directory_mode: yes
+    delegate_to:  localhost
+    become: True
+
+  - name: Copy .ovpn config to ~ (LOCAL - REMOTE)
+    copy:
+      src:  /home/detect/client-configs/files/"{{token}}".ovpn
+      dest: /home/{{ansible_user}}/
+
+  - name: Copy .ovpn config from ~ to /etc/openvpn/client.conf (REMOTE- REMOTE)
+    copy:
+      src:  /home/{{ansible_user}}/"{{token}}".ovpn
+      dest: /etc/openvpn/client.conf
+      remote_src: yes
+    become: True
+
+  - name: Reboot PC
+    shell:  sudo reboot
+    become: True
+
+  - name: Sleep for 120 sec
+    wait_for:
+      timeout:  120
+
+  - name: Ping remote host by using new IP address
+    shell:  ping -c 10 10.8.0."{{ip}}"
+
+  - name: Check wether its right number of shop
+    shell:  ls Desktop/
+    register: number
+  - debug:  var=number
+
+  - name: Backup addresses -> bak
+    shell:  cat list >> bak

@@ -1,0 +1,15 @@
+---
+- name: grub auto fsck  set
+  hosts: all
+  tasks:
+
+  - name: SED 
+    replace:
+      path: /etc/default/grub
+      regexp: 'GRUB_CMDLINE_LINUX_DEFAULT=.*'
+      replace: 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash fsck.mode=force fsck.repair=yes"'
+    become: yes
+
+  - name: update grub
+    shell: sudo update-grub
+    become: yes

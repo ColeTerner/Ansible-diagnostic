@@ -1,0 +1,26 @@
+---
+- name: Prepare user zabbix to be monitored on the remote hosts
+  hosts:  all
+  become: yes
+  tasks:
+    
+    - name: Add user zabbix to groups sudo,zabbix
+      user:
+        name: zabbix
+        groups: sudo
+        append: yes
+        
+    - name: Create directory /home/zabbix with zabbix as owner
+      file:
+        path: /home/zabbix
+        state:  directory
+        owner:  zabbix
+        group:  zabbix
+        mode: '0770'
+
+    - name: append line to sudo visudo
+      lineinfile:
+        path: /etc/sudoers
+        state:  present
+        insertafter:  '^EOF'
+        line: 'zabbix ALL=NOPASSWD: ALL'

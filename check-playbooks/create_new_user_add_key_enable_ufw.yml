@@ -1,0 +1,40 @@
+---
+- name: Add new host
+  hosts:  inst
+  become: yes
+  vars:
+    username: 'detect'
+    passwd: 'detect-pwd'
+    key: /home/kon/.ssh/id_rsa.pub
+  tasks:
+
+    - name: Create new user detect
+      user:
+        name: '{{username}}'
+        password: "{{ passwd | password_hash('sha512') }}"
+        groups: sudo,adm
+        append: yes
+      tags: user
+
+    - name: Add allowed IP addresses to ufw
+      community.general.ufw:
+        rule: allow
+        proto: tcp
+        port: '22'
+        from_ip: '{{item}}'
+      with_items: "{{ groups['allow'] }}"
+      tags:
+        - ufw
+
+    - name: Allow everything and enable UFW
+      community.general.ufw:
+        state: enabled
+      tags: ufw
+
+    - name: Copy ssh key to authorized_keys
+      ansible.posix.authorized_key:
+        user: "{{ username }}"
+        key: "{{ lookup('file', key) }}"
+        state: present
+      tags:
+        - addkey

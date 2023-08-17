@@ -1,0 +1,45 @@
+---
+- name: Cron
+  hosts: all
+  gather_facts: false
+  tasks:
+
+    - name: cron1
+      cron:
+        name: reboot unlift
+        special_time: hourly
+        user: root
+        job: 'grep "$(LC_ALL=C date -d 1\ hour\ ago +\%b\ \%e\ \%H:)" /var/log/syslog||grep -v CRON|grep -q "Too many"&&logger "unlift is dead, reboot"&&sudo reboot'
+        state: present
+      async: 10
+      become: yes
+
+    - name: cron2
+      cron:
+        name: reboot unlift2
+        special_time: hourly
+        user: root
+        job: 'grep "$(LC_ALL=C date -d 1\ hour\ ago +\%b\ \%e\ \%H:)" /var/log/syslog|grep -q "sqlite3.OperationalError: database is locked" &&logger "unlift is locked, reboot"&&sudo reboot'
+        state: present
+      async: 10
+      become: yes
+
+    - name: cron3
+      cron:
+        name: restart unlift
+        special_time: hourly
+        user: root
+        job: 'systemctl status unlift --no-pager --lines=0|grep -q ffmpeg&&logger "unlift is stuck, restart service"&&systemctl restart unlift'
+        state: present
+      async: 10
+      become: yes
+
+    - name: set sysctl
+      ansible.posix.sysctl:
+        name: "vm.swappiness"
+        value: "1"
+        state: present
+        sysctl_set: true
+        reload: true
+      async: 10
+      become: yes

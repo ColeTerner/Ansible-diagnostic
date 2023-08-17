@@ -1,0 +1,27 @@
+---
+- name: Transfer and execute a script.
+  hosts: all
+  vars:
+    myuser: "detect"
+    mypassword: "detect-pwd"
+  tasks:
+    - name: Check bit-radio.timer
+      shell:  systemctl status bit-radio.timer
+      register: timer
+    - debug:  var=timer.stdout_lines
+
+    - name: Check runned processes
+      shell: ps ax | grep bit-alert
+      register: alert
+      become: yes
+    - debug: var=alert.stdout_lines
+
+    - name: check user ALERT
+      shell:  w
+      register: user
+    - debug:  var=user.stdout_lines
+
+    - name: Make test visit through POST
+      shell: wget --post-data "" http://localhost:5477/test
+      register: answer
+    - debug:  var=answer.stdout_lines

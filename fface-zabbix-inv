@@ -1,0 +1,51 @@
+[all]    
+5.252.194.107 #name="face20107"
+5.252.194.119 #name="face20119"
+
+#5.252.192.37 #face16037
+#5.252.192.114 #face16114
+#5.252.192.116 #face16116
+
+#5.252.193.44 #zabbix
+
+[all:vars]
+zabbix_agent_server=zab.bit-tech.pro
+zabbix_agent_serveractive=zab.bit-tech.pro
+zabbix_url=https://zab.bit-tech.pro/
+zabbix_api_use=true
+zabbix_api_user=Roman
+zabbix_api_pass=1234
+zabbix_interface_port="10050"
+zabbix_host_groups='face'
+zabbix_link_templates=["Template OS Linux by Zabbix agent", "service monitoring TARANTUL"]
+zabbix_interface_type=agent
+zabbix_interface_use_ip="0"
+zabbix_interface_ip=""
+zabbix_host_description="My linux server"
+zabbix_host_status=enabled
+ansible_user=fface
+ansible_password=fface-pwd1902
+become-user=fface
+ansible_become_pass=fface-pwd1902
+ansible_sudo_pass=fface-pwd1902
+become=true
+ansible_python_interpreter=/usr/bin/python3
+tls_psk_identity=PSK 01015
+tls_psk=a5b93d8424e8b66d5465a6d81024597b694082ed3cfee0eb1570ca5eb5764f41
+#ansible_user=detect
+#ansible_password=fface-pws1902
+#become-user=root
+#ansible_become_pass=fface-pws1902
+#ansible_sudo_pass=fface-pws1902
+
+# [zab]
+#    zab.bit-tech.pro
+#     # face2170b.bit-tech.co
+#     # face2007b.bit-tech.co
+
+# [zab:vars]
+#     ansible_user=detect
+#     ansible_password=fface-pws1902
+#     become-user=detect
+#     ansible_become_pass=fface-pws1902
+#     ansible_sudo_pass=fface-pws1902

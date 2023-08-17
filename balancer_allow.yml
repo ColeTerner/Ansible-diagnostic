@@ -1,0 +1,31 @@
+---
+- name: add IP to balancer
+  hosts: all
+  tasks:
+
+
+    - name: Get white IP for balancer
+      shell:  curl -s http://5.252.193.80/forwarded/|cut -d "," -f1
+      register: white_ip
+    - debug:  var=white_ip.stdout
+
+    - name: reset facts
+      set_fact:
+        ansible_host: 5.252.193.80
+        ansible_user: fface
+        ansible_password: 'fface-pwd1902'
+        ansible_become_pass:  'fface-pwd1902'
+        ansible_sudo_pass:  'fface-pwd1902'
+
+    - name: Set white_ip into firewall exclusion
+      shell:  sudo ufw allow from {{ white_ip.stdout }} to any port 3133:3184,8101:8108 proto tcp
+      register: rule
+      become: yes
+    - debug:  var=rule.stdout
+
+
+    # - name: Add rule to balancer
+    #   shell: sshpass -p 'fface-pwd1902' ssh -tt fface@5.252.193.80 'sudo ufw allow from {{ white_ip.stdout }} to any port 3133:3184,8101:8108 proto tcp'
+    #   register: rule
+    #   delegate_to:  localhost
+    # - debug:  var=rule.stdout

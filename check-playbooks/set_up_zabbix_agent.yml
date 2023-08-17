@@ -1,0 +1,71 @@
+---
+- name: Install and configure zabbix agent
+  hosts:  all
+  vars:
+    zabbix_server_ip:  192.168.10.79
+    zabbix_server_hostname: zabbix.zayl.com
+    zabbix_user:  zabbix
+    zabbix_server_port: 10050
+  become: yes
+  tasks:
+
+    - name: Install zabbix-agent
+      apt:
+        name: zabbix-agent
+        state:  present
+        update_cache:  yes
+      
+    - name: remove  strings from  /etc/zabbix/zabbix_agentd.conf
+      lineinfile:
+        path: /etc/zabbix/zabbix_agentd.conf
+        regexp: '{{ item }}'
+        state:  absent
+      with_items:
+        - '^Server='
+        - '^ListenPort='
+        - '^ServerActive='
+        #- '^Hostname='
+        - '^User='
+        - '^LogRemoteCommands=0'
+
+
+    - name: append /etc/zabbix/zabbix_agentd.conf
+      lineinfile:
+        path: /etc/zabbix/zabbix_agentd.conf
+        state:  present
+        line: '{{ item }}'
+      with_items:
+        - 'Server={{zabbix_server_ip}}'
+        - 'ListenPort={{zabbix_server_port}}'
+        - 'ServerActive={{zabbix_server_ip}}'
+        #- 'Hostname={{}}'
+        - 'User={{zabbix_user}}'
+        - 'EnableRemoteCommands=1'
+        - 'LogRemoteCommands=1'
+        #- 'AllowKey=system.run[*]'   #Рабоатет только в новых релизах Ubuntu(22.04)
+
+    - name: restart service zabbix-agent
+      systemd:
+        name: zabbix-agent
+        state:  restarted
+
+    - name: Add user zabbix to groups sudo,zabbix
+      user:
+        name: zabbix
+        groups: sudo
+        append: yes
+        
+    - name: Create directory /home/zabbix with zabbix as owner
+      file:
+        path: /home/zabbix
+        state:  directory
+        owner:  zabbix
+        group:  zabbix
+        mode: '0770'
+
+    - name: append line to sudo visudo
+      lineinfile:
+        path: /etc/sudoers
+        state:  present
+        insertafter:  '^EOF'
+        line: 'zabbix ALL=NOPASSWD: ALL'

@@ -1,0 +1,15 @@
+---
+- name: unzip encrypted zip
+  hosts:  all
+  tasks:
+
+    - name: unzip encrypted zip
+      unarchive:
+        src: /install/install.zip
+        dest: /home/{{ ansible_user }}/
+        remote_src: True
+        extra_opts:
+          - "-P"
+          - "detect123-Zaq"
+          - "-o"
+      become: True

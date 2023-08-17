@@ -1,0 +1,49 @@
+---
+- name: add servers from nginx to sup2 /etc/hosts
+  hosts:  balancer
+  tasks:
+
+  - name: Get IPs and hostname from balancer
+    shell:  |
+      touch /home/fface/etc_hosts.txt
+      cat /etc/nginx/nginx.conf | grep 'server' | grep -v 'upstream' | awk '{print $2,$4}' | sed 's/:8104//g' | sed 's/:8101//g' | sed 's/:8102//g' | sed 's/:8103//g' | sed 's/#//g' | grep -vE 'face_server|{|}|server_|on' > /home/fface/etc_hosts.txt
+    #register: hosts
+  #- debug:  var=hosts.stdout_lines
+
+  - name: Convert JSON to plain text
+    set_fact:
+      output: "{{ hosts | from_json | join(' ') }}"
+  - debug:  var=output
+
+  - name: reset facts
+    set_fact:
+      ansible_host: 127.0.0.1
+      ansible_user: detect
+      ansible_password: 'fface-pws1902'
+      ansible_become_pass:  'fface-pws1902'
+      ansible_sudo_pass:  'fface-pws1902'
+
+  - name: reset facts
+    set_fact:
+      ansible_host: 127.0.0.1
+      ansible_user: kon
+      ansible_password: 'detect-pwd'
+      ansible_become_pass:  'detect-pwd'
+      ansible_sudo_pass:  'detect-pwd'
+
+  # - name: touch file hosts
+  #   shell:  touch /mnt/distr/ansible/hosts && >/mnt/distr/ansible/hosts
+
+  # - name: fill file hosts
+  #   shell:  echo '{{hosts.stdout_lines|from_json}}' > /mnt/distr/ansible/hosts
+
+  
+  # - name: Add block
+  #   blockinfile:
+  #     path: /etc/hosts
+  #     state: present
+  #     insertbefore: "^127.0.0.1.*"
+  #     block:  '{{ hosts.stdout_lines | from_json }}'
+  #     marker: "# {mark} ANSIBLE MANAGED BLOCK"
+  #   become: yes
+

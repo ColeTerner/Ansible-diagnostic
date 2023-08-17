@@ -1,0 +1,37 @@
+---
+- name: Stress
+  hosts: all
+  become: yes
+  tasks:
+
+    - name: Add proxy
+      shell:  echo 'Acquire::http::Proxy "http://face452k.bit-tech.co:8105";'|sudo tee /etc/apt/apt.conf.d/00aptproxy
+      
+
+    - name: apt update
+      shell: apt update
+      
+
+    - name: apt install stress
+      apt:
+        name: stress
+        state:  present
+      
+
+    - name: Gather everything
+      shell:  |
+        echo "Disk: $(lshw -c disk | grep product)" 
+        echo "CPU: $(cat /proc/cpuinfo |grep "model name"|tail -n1|cut -d ":" -f2)"" with ""$(cat /proc/cpuinfo |grep -c processor)"" cores"
+        echo "RAM: "$(lshw -c memory | grep -A 8 "bank:" | grep product | awk '{print $2}')
+      register: output
+    - debug:  var=output.stdout_lines
+
+    - name: Get thread
+      shell:  cat /proc/cpuinfo |grep -c processor
+      register: thread
+    - debug:  msg="{{ thread.stdout }} thread cpu"
+
+    - name: Launch stress test
+      shell: stress --cpu "{{ thread.stdout }}" --io 4 --vm 15 --vm-bytes 1024M --timeout 120m
+      register: stress
+    - debug: var=stress.stdout_lines

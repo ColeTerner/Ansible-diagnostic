@@ -1,0 +1,20 @@
+---
+- name: Set check unlift_diag
+  hosts:  all
+  tasks:
+
+  - name: Create task on cron
+    cron:
+      name: check
+      special_time: hourly
+      user: root
+      job: 'python3 /opt/unlift/unlift_proxy/unlift_diag.py -c /etc/unlift.ini|logger'
+      state: present
+    become: yes
+
+
+  - name: Check cron
+    shell:  sudo crontab -l
+    register: cron
+    become: yes
+  - debug:  var=cron.stdout_lines
