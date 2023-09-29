@@ -1,0 +1,31 @@
+[all]
+10.239.23.69
+10.239.27.117
+10.239.32.213
+10.239.25.85
+10.239.29.213
+10.239.25.149
+10.239.31.21
+10.239.37.181
+10.239.37.85
+
+#192.168.10.119
+#10.17.222.145
+#192.168.10.92
+#10.17.222.145
+#10.135.159.129
+#10.17.222.145
+#192.168.10.83
+#10.239.4.37 token=' 3207d58c9b '
+#10.239.15.133
+#10.16.138.145 token=' 8b657c3ffe '
+[all:vars]
+ansible_user=detect
+become-user=root
+ansible_password=detect-pwd
+ansible_become_pass=detect-pwd
+ansible_sudo_pass=detect-pwd
+license_ntls_server=face452k.bit-tech.co:3144
+ansible_python_interpreter=/usr/bin/python3
+timesrv=0.pool.ntp.org
+skip=1
