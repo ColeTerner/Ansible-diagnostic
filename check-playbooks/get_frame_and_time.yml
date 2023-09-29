@@ -1,0 +1,33 @@
+---
+- name: Get_frame
+  hosts: all
+  vars:
+    destination:  /home/bit/bit-alert/
+  tasks:
+
+    - name: get rtsp
+      shell:  curl -s http://127.0.0.1:18810/jobs | jq '.[]' | jq '.stream_url' | tr -d '\"'
+      register: rtsp
+    - debug:  var=rtsp.stdout_lines
+ 
+    - name: get pictures from them
+      shell:  ffmpeg -rtsp_transport tcp -i "{{item}}" -frames:v 1 -q:v 2 frame_"{{token}}"_"{{ item[-3:] }}".jpg -y
+      with_items:
+        - "{{ rtsp.stdout_lines | list}}"
+    
+    - name: check time of access
+      shell:  stat -c %N frame_* && stat -c %x frame_* | awk '{print $2}' | cut -d "." -f1
+      register: output
+    - debug: var=output.stdout_lines
+
+
+    - name: OS(NTP) time
+      shell:  date +"%Y-%m-%d %H:%M:%S"
+      register: os_time
+    - debug:  var=os_time.stdout
+
+    - name: Synchronization using rsync protocol (pull)
+      synchronize:
+        mode: pull
+        src: /home/{{ansible_user}}/frame*
+        dest: '{{destination}}'
