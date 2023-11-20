@@ -1,0 +1,31 @@
+---
+- name: set up dns 8.8.8.8 on every possible interface
+  hosts: all
+  vars:
+    dns:  8.8.8.8
+  tasks:
+
+    - name: Get all names of network interfaces
+      shell:  nmcli connection show | awk '{print $1}' | grep -vE 'NAME|lo'
+      register: net_interfaces
+      become: yes
+    - debug:  var=net_interfaces.stdout_lines
+
+    - name: Set 8.8.8.8 dns to every network interface as primary
+      shell:  nmcli connection modify '{{item}}' ipv4.dns '{{dns}}'
+      become: yes
+      with_items:
+        - '{{ net_interfaces.stdout_lines | list }}'
+
+    - name: Restart all network interfaces
+      shell:  nmcli con up '{{item}}'
+      async:  3
+      ignore_errors:  yes
+      become: yes
+      with_items:
+        - '{{ net_interfaces.stdout_lines | list }}'
+
+    - name: nslookup
+      shell: nslookup unlift.ru
+      register: resolve
+    - debug:  var=resolve.stdout_lines
